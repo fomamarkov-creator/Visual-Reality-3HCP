@@ -9,66 +9,47 @@ permissions:
   contents: write
 
 jobs:
-  build-assets:
-    name: Build on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            artifact_name: visual-reality-3hcp-linux
-          - os: windows-latest
-            artifact_name: visual-reality-3hcp.exe
+  build-binaries:
+    name: Build Cross-Platform Executables
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # --- ШАГ ДЛЯ LINUX (Сборка через быстрый uv) ---
-      - name: Install uv Build Manager (Ubuntu)
-        if: matrix.os == 'ubuntu-latest'
+      # 1. Разворачиваем сверхбыструю среду uv на стабильном Linux-сервере
+      - name: Install uv Build Manager
         uses: astral-sh/setup-uv@v5
         with:
           version: "latest"
 
-      - name: Compile Executable Binary (Ubuntu)
-        if: matrix.os == 'ubuntu-latest'
+      # 2. Компиляция готовых исполняемых файлов для релиза (Обе платформы на одном шаге)
+      - name: Compile Executables
         run: |
-          uv run --with mojo-compiler mojo build markov_user_interface.mojo -o ${{ matrix.artifact_name }}
+          # Сборка финальной версии под Linux (которая уже успешно проверена)
+          uv run --with mojo-compiler mojo build markov_user_interface.mojo -o visual-reality-3hcp-linux
+          
+          # КРОСС-СБОРКА ПОД WINDOWS: генерирует чистокровный релизный .exe файл без использования Windows-серверов
+          uv run --with mojo-compiler mojo build markov_user_interface.mojo --target x86_64-pc-windows-gnu -o visual-reality-3hcp.exe
         shell: bash
 
-      # --- ШАГ ДЛЯ WINDOWS (Сборка через системный скрипт Modular) ---
-      - name: Install Mojo Compiler via PowerShell (Windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          Set-ExecutionPolicy RemoteSigned -Scope Process -Force
-          &  {[scriptblock]::Create((New-Object System.Net.WebClient).DownloadString('https://modular.com'))}
-        shell: powershell
-
-      - name: Add Mojo to System PATH (Windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          echo "$env:USERPROFILE\.modular\bin" >> $env:GITHUB_PATH
-        shell: powershell
-
-      - name: Compile Windows Executable (Windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          mojo build markov_user_interface.mojo -o ${{ matrix.artifact_name }}
-        shell: pwsh
-
-      # --- ФИНАЛЬНАЯ ЗАГРУЗКА ДЛЯ ОБЕИХ ПЛАТФОРМ ---
+      # 3. Отправка обоих готовых файлов в раздел релизов на GitHub
       - name: Upload Binaries to Release
         uses: softprops/action-gh-release@v2
         if: github.event_name == 'release'
         with:
-          files: ${{ matrix.artifact_name }}
+          files: |
+            visual-reality-3hcp-linux
+            visual-reality-3hcp.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # 4. Сохранение обоих файлов в артефакты (для скачивания при ручном тесте по кнопке)
       - name: Upload Artifacts if Manual Run
         uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
         with:
-          name: ${{ matrix.artifact_name }}-build
-          path: ${{ matrix.artifact_name }}
+          name: visual-reality-3hcp-all-platforms
+          path: |
+            visual-reality-3hcp-linux
+            visual-reality-3hcp.exe
