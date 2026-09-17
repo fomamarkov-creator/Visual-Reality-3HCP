@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/1373783914.svg)](https://doi.org/10.5281/zenodo.22816257)
+
 # 🌐 Visual Reality 3HCP (DLSS 5 Alternative)
 
 🚀 **Visual Reality 3HCP** is an ultra-fast computational core for fluid dynamics and neural rendering, built on the principles of **Discrete Spatial Matrices (DSM)** and modular phase mathematics in rings of residues. The engine was developed as a lightweight, mathematical alternative to heavy AI-upscalers (like NVIDIA DLSS 5), completely bypassing the need for dedicated Tensor Cores.
