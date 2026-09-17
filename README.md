@@ -25,7 +25,7 @@
 
 
 ---
-## ⚡ Interactive Automated Test Bench / Интерактивный тестовый стенд
+
 
 Dynamic 3HCP Test Output
 
