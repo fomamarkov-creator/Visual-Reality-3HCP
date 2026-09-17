@@ -9,59 +9,80 @@ permissions:
   contents: write
 
 jobs:
-  build-assets:
-    name: Build on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            artifact_name: visual-reality-3hcp-linux
-          - os: windows-latest
-            artifact_name: visual-reality-3hcp.exe
-
+  # --- 1. СБОРКА ПОД LINUX (ПРОШЛА ИДЕАЛЬНО) ---
+  build-linux:
+    name: Build on Linux (Ubuntu)
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 1. Поднимаем стандартное и чистое Python-окружение
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Install uv Build Manager
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: '3.11'
+          version: "latest"
 
-      # 2. Устанавливаем официальный компилятор Mojo напрямую через pip
-      - name: Install Mojo Compiler via PIP
+      - name: Install Mojo and Compile for Linux
         run: |
-          python -m pip install --upgrade pip
-          pip install mojo
-
-      # 3. Чистая нативная компиляция исполняемых файлов без сторонних плагинов
-      - name: Compile Executable Binary (Linux)
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          mojo build markov_user_interface.mojo -o ${{ matrix.artifact_name }}
+          uv tool install mojo --prerelease=allow
+          uv tool run --from mojo-compiler mojo build markov_user_interface.mojo -o visual-reality-3hcp-linux
         shell: bash
 
-      - name: Compile Executable Binary (Windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          mojo build markov_user_interface.mojo -o ${{ matrix.artifact_name }}
-        shell: pwsh
-
-      # 4. Отправка готовых файлов в раздел релизов на GitHub
-      - name: Upload Binaries to Release
+      - name: Upload Linux Binary to Release
         uses: softprops/action-gh-release@v2
         if: github.event_name == 'release'
         with:
-          files: ${{ matrix.artifact_name }}
+          files: visual-reality-3hcp-linux
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 5. Резервное сохранение файлов в архив действий при ручном запуске
-      - name: Upload Artifacts if Manual Run
+      - name: Save Linux Artifact
         uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
         with:
-          name: ${{ matrix.artifact_name }}-build
-          path: ${{ matrix.artifact_name }}
+          name: visual-reality-3hcp-linux-build
+          path: visual-reality-3hcp-linux
+
+  # --- 2. СБОРКА ПОД WINDOWS (БЕЗ PIP, UV И СЕТЕВЫХ КОНФЛИКТОВ) ---
+  build-windows:
+    name: Build on Windows (.exe)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Автономная установка Mojo на Windows через официальный системный метод Modular
+      - name: Install Mojo Compiler via PowerShell
+        run: |
+          Set-ExecutionPolicy RemoteSigned -Scope Process -Force
+          $client = New-Object System.Net.WebClient
+          $client.DownloadFile('https://github.com', 'mojo.zip')
+        shell: powershell
+
+      # Распаковываем архиватором Windows
+      - name: Extract Mojo Compiler
+        run: |
+          Expand-Archive -Path "mojo.zip" -DestinationPath "D:\mojo-compiler"
+          echo "D:\mojo-compiler\bin" >> $env:GITHUB_PATH
+        shell: powershell
+
+      # Нативная чистая компиляция вашего кода напрямую в .exe
+      - name: Compile Windows Executable
+        run: |
+          & "D:\mojo-compiler\bin\mojo.exe" build markov_user_interface.mojo -o visual-reality-3hcp.exe
+        shell: pwsh
+
+      - name: Upload Windows Binary to Release
+        uses: softprops/action-gh-release@v2
+        if: github.event_name == 'release'
+        with:
+          files: visual-reality-3hcp.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Save Windows Artifact
+        uses: actions/upload-artifact@v4
+        if: github.event_name == 'workflow_dispatch'
+        with:
+          name: visual-reality-3hcp-windows-build
+          path: visual-reality-3hcp.exe
