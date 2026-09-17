@@ -10,26 +10,30 @@ permissions:
 
 jobs:
   build-binaries:
-    name: Build Multiplatform Executables
+    name: Build Cross-Platform Executables
     runs-on: ubuntu-latest
-    # Запускаем сборку внутри официального Docker-контейнера разработчиков языка
-    container:
-      image: ghcr.io/modularml/mojo:latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Чистая и прямая компиляция без внешних скачиваний и серверов Windows
+      # 1. Разворачиваем официальный тулчейн Mojo со встроенной кросс-платформенной поддержкой
+      - name: Set up Mojo Toolchain
+        uses: modularml/setup-mojo@v1
+        with:
+          mojo-version: '1.0.0'
+
+      # 2. КРОСС-КОМПИЛЯЦИЯ: Создаем Linux-бинарник и Windows .exe на одном надежном сервере
       - name: Compile Executables
         run: |
-          # 1. Сборка финального бинарника под Linux
+          # Сборка финальной версии под Linux (код полностью проверен компилятором)
           mojo build markov_user_interface.mojo -o visual-reality-3hcp-linux
           
-          # 2. КРОСС-СБОРКА ПОД WINDOWS: Генерирует чистокровный, автономный файл .exe для пользователей
-          mojo build markov_user_interface.mojo --target x86_64-pc-windows-gnu -o visual-reality-3hcp.exe
+          # КРОСС-СБОРКА ПОД WINDOWS: Генерирует готовый релизный исполняемый файл .exe
+          mojo build markov_user_interface.mojo --target x86_64-pc-windows-msvc -o visual-reality-3hcp.exe
+        shell: bash
 
-      # Автоматическое прикрепление готовых файлов к релизу
+      # 3. Отправка обоих готовых файлов в раздел релизов на GitHub
       - name: Upload Binaries to Release
         uses: softprops/action-gh-release@v2
         if: github.event_name == 'release'
@@ -40,12 +44,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Сохранение файлов в архиве Actions (для скачивания при ручном тесте по кнопке в привате)
+      # 4. Сохранение обоих файлов в артефакты действий (для скачивания при ручном тесте кнопкой)
       - name: Upload Artifacts if Manual Run
         uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
         with:
-          name: visual-reality-3hcp-final-build
+          name: visual-reality-3hcp-all-platforms
           path: |
             visual-reality-3hcp-linux
             visual-reality-3hcp.exe
