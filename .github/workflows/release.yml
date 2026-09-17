@@ -24,19 +24,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Официальное и стабильное развертывание Magic на любой ОС (включая Windows и Linux)
+      # Официальный и рабочий метод развертывания экосистемы от Modular
       - name: Set up Magic Build Tool
-        uses: modular/setup-magic@v1
+        uses: prefix-dev/setup-magic@v1
+        with:
+          run-install: false
 
-      # Инициализация проекта и автоматическое скачивание компилятора Mojo 1.0
+      # Скачивание компилятора Mojo 1.0 на основе файла mojoproject.toml
       - name: Install Project Dependencies and Mojo
         run: magic install
 
-      # Компиляция бинарного исполняемого файла
+      # Сборка исполняемых бинарных файлов для релиза
       - name: Compile Executable Binary
         run: magic run build
 
-      # Загрузка готовых бинарников в раздел релизов на GitHub
+      # Загрузка готовых файлов в раздел релизов на GitHub
       - name: Upload Binaries to Release
         uses: softprops/action-gh-release@v2
         if: github.event_name == 'release'
@@ -45,7 +47,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Резервное сохранение файлов при ручном тесте (кнопка во вкладке Actions)
+      # Резервное сохранение файлов в артефакты (при запуске кнопкой в приватном репо)
       - name: Upload Artifacts if Manual Run
         uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
