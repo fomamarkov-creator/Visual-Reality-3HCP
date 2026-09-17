@@ -3,7 +3,7 @@ name = "visual-reality-3hcp"
 version = "0.1.0"
 description = "Visual Reality 3HCP: 12-Fold Spatial Matrix Core & Neural Rendering Engine"
 authors = ["Efim S. Markov <visual-reality-3hcp@example.com>"]
-channels = ["conda-forge", "modular-channels"]
+channels = ["conda-forge", "https://modular.com"]
 platforms = ["linux-64", "win-64"]
 
 [dependencies]
