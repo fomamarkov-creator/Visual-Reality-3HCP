@@ -9,58 +9,35 @@ permissions:
   contents: write
 
 jobs:
-  build-assets:
-    name: Build on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            artifact_name: visual-reality-3hcp
-          - os: windows-latest
-            artifact_name: visual-reality-3hcp.exe
+  build-linux:
+    name: Build Executable on Linux Container
+    runs-on: ubuntu-latest
+    # Используем официальный контейнер, где Mojo 1.0.0 уже вшит внутрь
+    container:
+      image: ghcr.io/modularml/mojo:latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 1. Прямая установка Magic на Linux без использования сторонних экшенов
-      - name: Install Magic Build Tool (Ubuntu)
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          curl -sSL https://modular.com | bash
-          echo "$HOME/.modular/bin" >> $GITHUB_PATH
-        shell: bash
-
-      # 2. Прямая установка Magic на Windows через системный PowerShell
-      - name: Install Magic Build Tool (Windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          irm https://modular.com/win | iex
-          echo "$env:USERPROFILE\.modular\bin" >> $env:GITHUB_PATH
-        shell: powershell
-
-      # 3. Скачивание компилятора Mojo 1.0 и всех библиотек на основе mojoproject.toml
-      - name: Install Project Dependencies and Mojo
-        run: magic install
-
-      # 4. Компиляция бинарных файлов программы
+      # Компилируем бинарный файл напрямую встроенным компилятором без curl и лишних утилит
       - name: Compile Executable Binary
-        run: magic run build
+        run: |
+          mojo build markov_user_interface.mojo -o visual-reality-3hcp
 
-      # 5. Автоматическое прикрепление файлов к релизу (для публичных версий)
+      # Автоматическое прикрепление файла к релизу (для публичных версий)
       - name: Upload Binaries to Release
         uses: softprops/action-gh-release@v2
         if: github.event_name == 'release'
         with:
-          files: ${{ matrix.artifact_name }}
+          files: visual-reality-3hcp
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 6. Сохранение бинарников в архиве GitHub (при ручном тесте в приватном репо)
+      # Сохранение бинарника в архиве (при ручном тесте по кнопке в приватном репо)
       - name: Upload Artifacts if Manual Run
         uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
         with:
-          name: ${{ matrix.artifact_name }}-build
-          path: ${{ matrix.artifact_name }}
+          name: visual-reality-3hcp-linux-build
+          path: visual-reality-3hcp
