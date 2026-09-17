@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build-assets:
-    name: Build on ${{ matrix.os }}
+    name: Build on Linux and Windows
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -24,29 +24,30 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 1. Разворачиваем изолированное окружение Pixi с явным указанием манифеста Mojo
-      - name: Setup Pixi Environment
-        uses: prefix-dev/setup-pixi@v0.8.1
+      # 1. Поднимаем чистое и стабильное Python-окружение
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          manifest-path: 'mojoproject.toml' # Указываем Pixi искать именно ваш файл проекта
-          run-install: true
-          cache: false
+          python-version: '3.11'
 
-      # 2. Чистая нативная компиляция силами самого Mojo
-      - name: Compile Executable Binary
+      # 2. Устанавливаем официальный magic глобально через pip
+      - name: Install Modular Magic via PIP
         run: |
-          pixi run build
+          python -m pip install --upgrade pip
+          pip install modular-magic
 
-      # 3. Переименовываем готовый файл под имя артефакта релиза
-      - name: Rename Output Binary (Linux)
+      # 3. Чистая нативная компиляция исполняемых файлов без сторонних плагинов
+      - name: Compile Executable Binary (Linux)
         if: matrix.os == 'ubuntu-latest'
-        run: mv markov_user_interface ${{ matrix.artifact_name }}
+        run: |
+          magic global run mojo build markov_user_interface.mojo -o ${{ matrix.artifact_name }}
         shell: bash
 
-      - name: Rename Output Binary (Windows)
+      - name: Compile Executable Binary (Windows)
         if: matrix.os == 'windows-latest'
-        run: rename markov_user_interface ${{ matrix.artifact_name }}
-        shell: cmd
+        run: |
+          magic global run mojo build markov_user_interface.mojo -o ${{ matrix.artifact_name }}
+        shell: pwsh
 
       # 4. Отправка готовых файлов в раздел релизов на GitHub
       - name: Upload Binaries to Release
@@ -57,7 +58,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 5. Резервное сохранение файлов в архив действий (при ручном тесте кнопкой в привате)
+      # 5. Резервное сохранение файлов в архив действий при ручном запуске
       - name: Upload Artifacts if Manual Run
         uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
