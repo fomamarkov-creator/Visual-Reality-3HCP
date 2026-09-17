@@ -1,0 +1,83 @@
+# ==============================================================================
+#  PROJECT: Visual Reality 3HCP - Discrete Spatial Matrix Core
+#  MODULE:  Search Engine Optimization (SEO) & AI Scraper Protection Manifest
+# ==============================================================================
+
+User-agent: *
+# Разрешаем индексацию главных страниц проекта
+Allow: /$
+Allow: /README.md
+Allow: /docs/
+
+# Блокируем поисковикам доступ к системному и временному мусору
+Disallow: /build/
+Disallow: /dist/
+Disallow: /__pycache__/
+Disallow: /.github/
+Disallow: /.git/
+Disallow: /mojoproject.toml
+Disallow: /requirements.txt
+Disallow: /.gitignore
+Disallow: /*.spec$
+Disallow: /*.mojo$
+
+# ==============================================================================
+#  БЛОКИРОВКА ИИ-БОТОВ И ПАСЕРОВ (Защита ядра от несанкционированного сбора данных)
+# ==============================================================================
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
+
+User-agent: Applebot-Extended
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: PerplexityBot
+Disallow: /
+
+User-agent: CohereBot
+Disallow: /
+
+User-agent: Omgilibot
+Disallow: /
+
+User-agent: Omgili
+Disallow: /
+
+User-agent: FacebookBot
+Disallow: /
+
+User-agent: Diffbot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: ImagesiftBot
+Disallow: /
+
+# ==============================================================================
+#  НАСТРОЙКИ ДЛЯ КРАУЛЕРОВ ПОИСКОВЫХ СИСТЕМ
+# ==============================================================================
+User-agent: Googlebot
+Allow: /
+Disallow: /build/
+Disallow: /dist/
+Disallow: /.github/
+
+User-agent: Yandex
+Allow: /
+Disallow: /build/
+Disallow: /dist/
+Disallow: /.github/
+Clean-param: ref /
