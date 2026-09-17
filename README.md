@@ -1,4 +1,4 @@
-[![DOI](https://zenodo.org/badge/1373783914.svg)](https://doi.org/10.5281/zenodo.22816257)
+[![Zenodo DOI](https://shields.io)](https://doi.org/10.5281/zenodo.22816257)
 
 ---
 
