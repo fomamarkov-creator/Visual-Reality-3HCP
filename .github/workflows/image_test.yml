@@ -3,8 +3,8 @@ name: Dynamic Image Comparison Test
 on:
   push:
     paths:
-      - 'input/**' # Запускается при обновлении картинок
-      - 'scripts/**' # Полезно добавить: запустится и при обновлении самого кода
+      - 'input/**'       # Запускается автоматически, когда вы загружаете картинку (например, с телефона)
+      - 'scripts/**'     # Запускается при обновлении логики расчетов бенчмарка
 
 jobs:
   compare:
@@ -18,22 +18,23 @@ jobs:
         with:
           python-version: '3.10'
 
-      # Использован headless-пакет, чтобы избежать падения из-за libGL.so.1
+      # Установка headless-пакетов для предотвращения падения из-за отсутствия GUI на сервере
       - name: Install image processing tools
         run: pip install opencv-python-headless pillow numpy
 
+      # Запуск обновленного честного теста с расчетом SSIM, PSNR и генерацией таблицы
       - name: Execute 3HCP Core and Generate Visual Diff
         run: |
           python scripts/process_comparison.py 
 
+      # Пуш результатов обратно на гитхаб
       - name: Commit and Push processed comparison
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          # Явный пуш изменений. Если папки input изначально не было, 
-          # скрипт её создаст, поэтому сохраняем и её эталонный тест
-          git add input/ output/
+          # git add обязательно включает README.md, чтобы таблица сохранялась под картинкой
+          git add input/ output/comparison.png README.md
           
-          git commit -m "Auto-generated 3HCP vs DLSS visual comparison test" || exit 0
+          git commit -m "Auto-generated 3HCP vs DLSS visual comparison and benchmark table" || exit 0
           git push
