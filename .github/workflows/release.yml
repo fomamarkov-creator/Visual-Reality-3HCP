@@ -3,6 +3,7 @@ name: Compile and Release Visual Reality 3HCP
 on:
   release:
     types: [published]
+  workflow_dispatch: # Позволяет запускать сборку вручную кнопкой в интерфейсе GitHub
 
 permissions:
   contents: write
@@ -23,12 +24,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Mojo Compiler
-        uses: modularto/action-setup-max@v1
+      - name: Setup Magic and Mojo
+        uses: prefix-dev/setup-pixi@v0.8.1
         with:
-          components: 'mojo'
+          run-install: false
 
-      - name: Install Magic Packet Manager
+      - name: Install Modular Magic Global
         run: |
           pip install modular-magic
 
@@ -40,7 +41,16 @@ jobs:
 
       - name: Upload Binaries to Release
         uses: softprops/action-gh-release@v2
+        if: github.event_name == 'release' # Загружает в релиз только если это был триггер релиза
         with:
           files: ${{ matrix.artifact_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Если запустили вручную кнопкой, просто сохраняем файлы в артефакты GitHub Actions
+      - name: Upload Artifacts if Manual Run
+        uses: actions/upload-artifact@v4
+        if: github.event_name == 'workflow_dispatch'
+        with:
+          name: ${{ matrix.artifact_name }}-build
+          path: ${{ matrix.artifact_name }}
