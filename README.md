@@ -28,6 +28,12 @@
 
 
 ---
+## ⚡ Interactive Automated Test Bench / Интерактивный тестовый стенд
+
+Dynamic 3HCP Test Output
+
+<!-- BENCHMARK_TABLE_START -->
+<!-- BENCHMARK_TABLE_END -->
 
 ---
 
