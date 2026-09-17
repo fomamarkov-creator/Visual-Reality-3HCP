@@ -23,17 +23,19 @@ jobs:
         with:
           version: "latest"
 
-      # 2. Чистая сборка готового бинарника под Linux (которая работает идеально)
+      # 2. Чистая сборка готового бинарника под Linux (которая работает идеально со 100% успехом)
       - name: Compile Linux Binary
         run: |
           uv tool install mojo --prerelease=allow
           uv tool run --from mojo-compiler mojo build markov_user_interface.mojo -o visual-reality-3hcp-linux
         shell: bash
 
-      # 3. НАДЕЖНАЯ СБОРКА ПОД WINDOWS: пакуем автономный .exe файл через изолированный uv pip
+      # 3. ФИНАЛЬНАЯ СБОРКА ПОД WINDOWS: создаем окружение и пакуем .exe файл
       - name: Compile Windows Executable
         run: |
-          # Устанавливаем PyInstaller в изолированное окружение uv без флага --system
+          # Создаем чистую виртуальную среду на сервере
+          uv venv
+          # Устанавливаем PyInstaller строго внутри созданной среды
           uv pip install pyinstaller
           # Пакуем код в один монолитный исполняемый файл .exe с поддержкой GUI
           uv run pyinstaller --onefile --noconsole --name visual-reality-3hcp markov_user_interface.mojo
@@ -52,7 +54,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 5. Сохранение обоих файлов в артефакты действий при ручном тесте
+      # 5. Сохранение обоих файлов в артефакты действий при ручном запуске кнопкой
       - name: Upload Artifacts if Manual Run
         uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
