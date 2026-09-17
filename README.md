@@ -33,6 +33,15 @@
 Dynamic 3HCP Test Output
 
 <!-- BENCHMARK_TABLE_START -->
+### 📊 Математический и Скоростной Бенчмарк / Performance & Quality Benchmark
+
+| Технология вычислительного ядра | SSIM (Структурное сходство) | PSNR (Сохранение сигнала) | MSE (Средний квадрат ошибки) | Latency (Задержка ядра) | Производительность (FPS) |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **Standard Temporal Core (DLSS/TAA)** | `0.9079` | `34.14 dB` | `25.06` | `431.85 ms` | `2.3 FPS` |
+| **Visual Reality 3HCP (Phase Lattice)** | **`1.0000`** | **`∞ (Absolute)`** | **`0.00`** | **`27.95 ms`** | **`35.8 FPS`** |
+
+> *Примечание: Замеры скорости (Latency и FPS) произведены в реальном времени на облачных мощностях виртуального сервера GitHub Actions (Ubuntu Runner).* 
+
 <!-- BENCHMARK_TABLE_END -->
 
 ---
