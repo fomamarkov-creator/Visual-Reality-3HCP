@@ -1,4 +1,4 @@
-name: Compile and Release Visual Reality 3HCP (Windows)
+name: Compile and Release Visual Reality 3HCP
 
 on:
   release:
@@ -9,45 +9,53 @@ permissions:
   contents: write
 
 jobs:
-  build-windows:
-    name: Build Executable on Windows
-    runs-on: windows-latest
+  build-binaries:
+    name: Build Cross-Platform Executables
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 1. Установка официального скоростного менеджера сред uv
+      # 1. Установка менеджера uv (на Linux он работает идеально)
       - name: Install uv Build Manager
         uses: astral-sh/setup-uv@v5
         with:
           version: "latest"
 
-      # 2. Чистая глобальная установка компилятора Mojo через официальный реестр PyPI
-      - name: Install Mojo Compiler via uv
+      # 2. Установка официального компилятора Mojo на Linux (проходит мгновенно)
+      - name: Install Mojo Compiler
         run: |
           uv tool install mojo --prerelease=allow
         shell: bash
 
-      # 3. Чистая и прямая компиляция вашего интерфейса в исполняемый .exe файл
-      - name: Compile Windows Executable
+      # 3. КРОСС-КОМПИЛЯЦИЯ: Собираем файлы для Linux и для Windows на одном сервере
+      - name: Compile Executables
         run: |
-          mojo build markov_user_interface.mojo -o visual-reality-3hcp.exe
+          # Сборка под Linux
+          mojo build markov_user_interface.mojo -o visual-reality-3hcp-linux
+          
+          # Кросс-сборка под Windows (генерирует .exe без наличия Windows-сервера!)
+          mojo build markov_user_interface.mojo --target x86_64-pc-windows-msvc -o visual-reality-3hcp.exe
         shell: bash
 
-      # 4. Отправка готового .exe в раздел релизов на GitHub (для публичных версий)
-      - name: Upload Binary to Release
+      # 4. Отправка обоих файлов в релизы GitHub (для публичных версий)
+      - name: Upload Binaries to Release
         uses: softprops/action-gh-release@v2
         if: github.event_name == 'release'
         with:
-          files: visual-reality-3hcp.exe
+          files: |
+            visual-reality-3hcp-linux
+            visual-reality-3hcp.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 5. Сохранение .exe в архив артефактов (для ручного теста кнопкой в приватном репо)
+      # 5. Сохранение обоих файлов в архиве Actions при ручном тесте (для привата)
       - name: Upload Artifacts if Manual Run
         uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
         with:
-          name: visual-reality-3hcp-windows-build
-          path: visual-reality-3hcp.exe
+          name: visual-reality-3hcp-all-platforms
+          path: |
+            visual-reality-3hcp-linux
+            visual-reality-3hcp.exe
