@@ -51,7 +51,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Разворачиваем экосистему Pixi, которая умеет эмулировать тулчейн Windows
+      # Разворачиваем экосистему Pixi, которая умеет изолировать тулчейны
       - name: Setup Pixi Environment
         uses: prefix-dev/setup-pixi@v0.8.1
         with:
@@ -60,12 +60,12 @@ jobs:
       # Устанавливаем кросс-компилятор и собираем нативный .exe для пользователей
       - name: Cross-Compile Windows Binary
         run: |
-          # Инициализируем среду Pixi для кросс-сборки под Windows
-          pixi init --format toml
+          # Инициализируем среду Pixi под новый формат Mojoproject
+          pixi init --format mojoproject
           pixi channel add https://modular.com
           pixi channel add conda-forge
           
-          # Явно требуем Windows-версию пакета для линковки архитектуры
+          # Явно добавляем Windows-версию пакета для линковки архитектуры
           pixi add max-mojo --platform win-64
           
           # Запускаем компиляцию бинарного исполняемого файла .exe
