@@ -3,12 +3,6 @@ name = "visual-reality-3hcp"
 version = "0.1.0"
 description = "Visual Reality 3HCP: 12-Fold Spatial Matrix Core & Neural Rendering Engine"
 authors = ["Efim S. Markov <visual-reality-3hcp@example.com>"]
-channels = ["conda-forge", "https://modular.com"]
 platforms = ["win-64"]
 
 [dependencies]
-max-mojo = ">=1.0.0"
-
-[tasks]
-run = "mojo.exe markov_user_interface.mojo"
-build = "mojo build markov_user_interface.mojo -o visual-reality-3hcp.exe"
