@@ -1,0 +1,11 @@
+# Временные папки PyInstaller
+build/
+dist/
+*.spec
+
+# Кэш Python
+__pycache__/
+*.pyc
+
+# Результаты работы движка (чтобы не заливать картинки тестов в код)
+visual_reality_3hcp_result.png
