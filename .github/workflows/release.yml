@@ -24,21 +24,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Официальный и рабочий метод развертывания экосистемы от Modular
+      # Корректный, официально существующий экшен сборщика от разработчиков
       - name: Set up Magic Build Tool
-        uses: prefix-dev/setup-magic@v1
+        uses: prefix-dev/setup-pixi@v0.8.1
         with:
           run-install: false
 
-      # Скачивание компилятора Mojo 1.0 на основе файла mojoproject.toml
+      # Загрузка компилятора Mojo и зависимостей на базе mojoproject.toml
       - name: Install Project Dependencies and Mojo
         run: magic install
 
-      # Сборка исполняемых бинарных файлов для релиза
+      # Сборка готовых бинарных файлов проекта
       - name: Compile Executable Binary
         run: magic run build
 
-      # Загрузка готовых файлов в раздел релизов на GitHub
+      # Отправка собранного ПО в раздел релизов на GitHub
       - name: Upload Binaries to Release
         uses: softprops/action-gh-release@v2
         if: github.event_name == 'release'
@@ -47,7 +47,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Резервное сохранение файлов в артефакты (при запуске кнопкой в приватном репо)
+      # Резервное копирование файлов в артефакты (при ручном тесте по кнопке)
       - name: Upload Artifacts if Manual Run
         uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
