@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  # --- 1. СБОРКА ПОД LINUX (РАБОТАЕТ НА 100% СО СТАРТУ) ---
+  # --- 1. СБОРКА ПОД LINUX (ПРОШЛА ИДЕАЛЬНО) ---
   build-linux:
     name: Build on Linux (Ubuntu)
     runs-on: ubuntu-latest
@@ -43,32 +43,34 @@ jobs:
           name: visual-reality-3hcp-linux-build
           path: visual-reality-3hcp-linux
 
-  # --- 2. СБОРКА ПОД WINDOWS (ПРЯМАЯ ЗАГРУЗКА БИНАРНИКА) ---
+  # --- 2. СБОРКА ПОД WINDOWS НА LINUX-СЕРВЕРЕ (КРОСС-ПЛАТФОРМЕННЫЙ ВАРИАНТ) ---
   build-windows:
-    name: Build on Windows (.exe)
-    runs-on: windows-latest
+    name: Build Windows Executable (.exe)
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Скачиваем нативный официальный компилятор напрямую из официального простого индекса дистрибьюции Modular
-      - name: Download Portable Mojo for Windows
-        run: |
-          Invoke-WebRequest -Uri "https://modular.com" -OutFile "mojo.zip"
-        shell: powershell
+      # Разворачиваем экосистему Pixi, которая умеет эмулировать тулчейн Windows
+      - name: Setup Pixi Environment
+        uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          run-install: false
 
-      # Распаковываем системным архиватором Windows
-      - name: Extract Mojo Compiler
+      # Устанавливаем кросс-компилятор и собираем нативный .exe для пользователей
+      - name: Cross-Compile Windows Binary
         run: |
-          Expand-Archive -Path "mojo.zip" -DestinationPath "D:\mojo-compiler"
-          echo "D:\mojo-compiler\bin" >> $env:GITHUB_PATH
-        shell: powershell
-
-      # Чистая нативная компиляция кода в финальный исполняемый файл .exe
-      - name: Compile Windows Executable
-        run: |
-          & "D:\mojo-compiler\bin\mojo.exe" build markov_user_interface.mojo -o visual-reality-3hcp.exe
-        shell: pwsh
+          # Инициализируем среду Pixi для кросс-сборки под Windows
+          pixi init --format toml
+          pixi channel add https://modular.com
+          pixi channel add conda-forge
+          
+          # Явно требуем Windows-версию пакета для линковки архитектуры
+          pixi add max-mojo --platform win-64
+          
+          # Запускаем компиляцию бинарного исполняемого файла .exe
+          pixi run --platform win-64 mojo build markov_user_interface.mojo -o visual-reality-3hcp.exe
+        shell: bash
 
       - name: Upload Windows Binary to Release
         uses: softprops/action-gh-release@v2
