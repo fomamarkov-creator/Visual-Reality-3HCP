@@ -23,25 +23,25 @@ jobs:
         with:
           version: "latest"
 
-      # 2. Чистая сборка готового бинарника под Linux (которая у вас работала со 100% успехом)
+      # 2. Чистая сборка готового бинарника под Linux (которая работает идеально)
       - name: Compile Linux Binary
         run: |
           uv tool install mojo --prerelease=allow
           uv tool run --from mojo-compiler mojo build markov_user_interface.mojo -o visual-reality-3hcp-linux
         shell: bash
 
-      # 3. НАДЕЖНАЯ СБОРКА ПОД WINDOWS: компилируем нативный автономный .exe файл для пользователей
+      # 3. НАДЕЖНАЯ СБОРКА ПОД WINDOWS: пакуем автономный .exe файл через изолированный uv pip
       - name: Compile Windows Executable
         run: |
-          # Устанавливаем PyInstaller для сборки Windows-приложения
-          uv pip install --system pyinstaller
+          # Устанавливаем PyInstaller в изолированное окружение uv без флага --system
+          uv pip install pyinstaller
           # Пакуем код в один монолитный исполняемый файл .exe с поддержкой GUI
-          pyinstaller --onefile --noconsole --name visual-reality-3hcp markov_user_interface.mojo
+          uv run pyinstaller --onefile --noconsole --name visual-reality-3hcp markov_user_interface.mojo
           # Переносим готовый файл в корень для загрузки
           mv dist/visual-reality-3hcp.exe ./visual-reality-3hcp.exe
         shell: bash
 
-      # 4. Отправка обоих готовых файлов в раздел релизов на GitHub
+      # 4. Отправка обоих готовых файлов во вкладку релизов на GitHub
       - name: Upload Binaries to Release
         uses: softprops/action-gh-release@v2
         if: github.event_name == 'release'
@@ -52,7 +52,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 5. Сохранение обоих файлов в артефакты действий (для скачивания при ручном тесте в привате)
+      # 5. Сохранение обоих файлов в артефакты действий при ручном тесте
       - name: Upload Artifacts if Manual Run
         uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
