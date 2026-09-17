@@ -24,26 +24,30 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Разворачиваем стандартный Python, который есть везде
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-data: '3.11'
-
-      # Ставим пакетный менеджер magic глобально через pip
-      - name: Install Modular Magic Global
+      # 1. Установка Magic (Pixi Core) без каких-либо токенов и авторизаций
+      - name: Install Magic Build Tool (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
         run: |
-          pip install modular-magic
+          curl -ssL https://magic.modular.com | sh
+          echo "$HOME/.modular/bin" >> $GITHUB_PATH
+        shell: bash
 
-      # Скачиваем сам компилятор Mojo и зависимости проекта
-      - name: Install Project Dependencies
+      - name: Install Magic Build Tool (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          irm https://modular.com | iex
+          echo "$env:USERPROFILE\.modular\bin" >> $env:GITHUB_PATH
+        shell: powershell
+
+      # 2. Инициализация и скачивание Mojo 1.0 из открытого канала
+      - name: Install Project Dependencies and Mojo
         run: magic install
 
-      # Компилируем бинарник строго через команду magic
+      # 3. Прямая компиляция через задачу из нашего mojoproject.toml
       - name: Compile Executable Binary
         run: magic run build
 
-      # Загружаем готовые файлы в релиз (если запуск по кнопке релиза)
+      # 4. Загрузка в релиз (работает только при публикации официального релиза)
       - name: Upload Binaries to Release
         uses: softprops/action-gh-release@v2
         if: github.event_name == 'release'
@@ -52,9 +56,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Если запустили вручную кнопкой в приватном репо, сохраняем файлы в архив GitHub
+      # 5. Сохранение в артефакты (при ручном тесте по кнопке в приватном репо)
       - name: Upload Artifacts if Manual Run
-        uses: actions/upload-artifact@v4
+        uses: actions/artifact@v4
         if: github.event_name == 'workflow_dispatch'
         with:
           name: ${{ matrix.artifact_name }}-build
