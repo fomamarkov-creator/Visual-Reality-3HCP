@@ -9,58 +9,44 @@ permissions:
   contents: write
 
 jobs:
-  build-assets:
-    name: Build on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            artifact_name: visual-reality-3hcp-linux
-          - os: windows-latest
-            artifact_name: visual-reality-3hcp.exe
+  build-binaries:
+    name: Build Cross-Platform Executables
+    runs-on: ubuntu-latest
+    # Используем официальный и всегда доступный контейнер со встроенным компилятором Mojo
+    container:
+      image: modularml/max:latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 1. Железобетонная установка скоростного менеджера uv (работает идеально на всех ОС)
-      - name: Install uv Build Manager
-        uses: astral-sh/setup-uv@v5
-        with:
-          version: "latest"
-
-      # --- ШАГ ДЛЯ UBUNTU LINUX (КОТОРЫЙ У ВАС УЖЕ РАБОТАЛ) ---
-      - name: Install Mojo and Compile (Linux)
-        if: matrix.os == 'ubuntu-latest'
+      # Прямая компиляция встроенным в контейнер компилятором без внешних скачиваний
+      - name: Compile Executables
         run: |
-          uv tool install mojo --prerelease=allow
-          uv tool run --from mojo-compiler mojo build markov_user_interface.mojo -o ${{ matrix.artifact_name }}
+          # 1. Сборка стабильного бинарника под Linux
+          mojo build markov_user_interface.mojo -o visual-reality-3hcp-linux
+          
+          # 2. КРОСС-СБОРКА ДЛЯ WINDOWS: компилятор внутри контейнера сгенерирует чистый .exe файл
+          mojo build markov_user_interface.mojo --target x86_64-pc-windows-msvc -o visual-reality-3hcp.exe
         shell: bash
 
-      # --- ШАГ ДЛЯ WINDOWS (ЧИСТАЯ СБОРКА БЕЗ СЛОМАННЫХ ССЫЛОК И ПАКЕТОВ) ---
-      - name: Install Mojo and Compile (Windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          # Устанавливаем официальный автономный компилятор mojo-compiler напрямую
-          uv tool install mojo-compiler --index-url https://modular.com --prerelease=allow
-          # Компилируем нативный исполняемый файл .exe
-          uv tool run mojo build markov_user_interface.mojo -o ${{ matrix.artifact_name }}
-        shell: bash
-
-      # --- ФИНАЛЬНАЯ ЗАГРУЗКА ДЛЯ ОБЕИХ ПЛАТФОРМ ---
+      # Отправка готовых бинарных файлов в раздел релизов на GitHub
       - name: Upload Binaries to Release
         uses: softprops/action-gh-release@v2
         if: github.event_name == 'release'
         with:
-          files: ${{ matrix.artifact_name }}
+          files: |
+            visual-reality-3hcp-linux
+            visual-reality-3hcp.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Резервное сохранение в артефакты действий (для скачивания при ручном тесте по кнопке)
+      # Резервное сохранение в артефакты (для скачивания при ручном запуске кнопкой в привате)
       - name: Upload Artifacts if Manual Run
         uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
         with:
-          name: ${{ matrix.artifact_name }}-build
-          path: ${{ matrix.artifact_name }}
+          name: visual-reality-3hcp-all-platforms
+          path: |
+            visual-reality-3hcp-linux
+            visual-reality-3hcp.exe
