@@ -9,82 +9,64 @@ permissions:
   contents: write
 
 jobs:
-  # --- 1. СБОРКА ПОД LINUX (РАБОТАЕТ НА 100%) ---
-  build-linux:
-    name: Build on Linux (Ubuntu)
-    runs-on: ubuntu-latest
+  build-assets:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: visual-reality-3hcp-linux
+          - os: windows-latest
+            artifact_name: visual-reality-3hcp.exe
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install uv Build Manager
-        uses: astral-sh/setup-uv@v5
+      # 1. Поднимаем чистую изолированную среду Python на каждом сервере
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          version: "latest"
+          python-version: '3.11'
+          cache: 'pip'
 
-      - name: Install Mojo and Compile for Linux
+      # 2. Устанавливаем необходимые вычислительные библиотеки и упаковщик PyInstaller
+      - name: Install Dependencies
         run: |
-          uv tool install mojo --prerelease=allow
-          uv tool run --from mojo-compiler mojo build markov_user_interface.mojo -o visual-reality-3hcp-linux
+          python -m pip install --upgrade pip
+          pip install numpy matplotlib pyinstaller
+
+      # 3. Чистая нативная компиляция кода в монолитный исполняемый файл
+      - name: Compile Executable Binary
+        run: |
+          pyinstaller --onefile --noconsole --name visual-reality-3hcp markov_user_interface.py
+
+      # 4. Переименовываем готовый файл под имя артефакта релиза (только для Linux)
+      - name: Rename Output Binary (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: mv dist/visual-reality-3hcp dist/${{ matrix.artifact_name }}
         shell: bash
 
-      - name: Upload Linux Binary to Release
+      # На Windows файл сразу собирается с нужным именем и расширением .exe
+      - name: Rename Output Binary (Windows)
+        if: matrix.os == 'windows-latest'
+        run: rename dist\visual-reality-3hcp.exe ${{ matrix.artifact_name }}
+        shell: cmd
+
+      # 5. Отправка готовых бинарников во вкладку релизов на GitHub
+      - name: Upload Binaries to Release
         uses: softprops/action-gh-release@v2
         if: github.event_name == 'release'
         with:
-          files: visual-reality-3hcp-linux
+          files: dist/${{ matrix.artifact_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Save Linux Artifact
+      # 6. Резервное сохранение файлов в архив действий (для скачивания при ручном тесте)
+      - name: Upload Artifacts if Manual Run
         uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
         with:
-          name: visual-reality-3hcp-linux-build
-          path: visual-reality-3hcp-linux
-
-  # --- 2. СБОРКА ПОД WINDOWS НА LINUX-СЕРВЕРЕ (ИСПРАВЛЕННЫЙ КРОСС-ПЛАТФОРМЕННЫЙ ВАРИАНТ) ---
-  build-windows:
-    name: Build Windows Executable (.exe)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      # Разворачиваем экосистему Pixi
-      - name: Setup Pixi Environment
-        uses: prefix-dev/setup-pixi@v0.8.1
-        with:
-          run-install: false
-
-      # Устанавливаем кросс-компилятор и собираем нативный .exe для пользователей
-      - name: Cross-Compile Windows Binary
-        run: |
-          # Инициализируем среду Pixi под формат Mojoproject
-          pixi init --format mojoproject
-          
-          # Исправлено: добавление каналов репозиториев через синтаксис project channel
-          pixi project channel add https://modular.com
-          pixi project channel add conda-forge
-          
-          # Явно добавляем Windows-версию пакета для линковки архитектуры
-          pixi add max-mojo --platform win-64
-          
-          # Запускаем компиляцию бинарного исполняемого файла .exe
-          pixi run --platform win-64 mojo build markov_user_interface.mojo -o visual-reality-3hcp.exe
-        shell: bash
-
-      - name: Upload Windows Binary to Release
-        uses: softprops/action-gh-release@v2
-        if: github.event_name == 'release'
-        with:
-          files: visual-reality-3hcp.exe
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Save Windows Artifact
-        uses: actions/upload-artifact@v4
-        if: github.event_name == 'workflow_dispatch'
-        with:
-          name: visual-reality-3hcp-windows-build
-          path: visual-reality-3hcp.exe
+          name: ${{ matrix.artifact_name }}-build
+          path: dist/${{ matrix.artifact_name }}
