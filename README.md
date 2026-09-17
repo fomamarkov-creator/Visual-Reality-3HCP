@@ -49,7 +49,10 @@ Go to the **Releases** section on the right side of this repository page and dow
 * `visual-reality-3hcp.exe` — Standalone Windows executable (runs with a double-click, no libraries or python required).
 * `visual-reality-3hcp-linux` — Standalone Linux binary executable.
 
+* `visual-reality-3hcp-(mojo)-linux` — Standalone Linux binary executable.(Mojo version).
+  
 ## 📦 Как запустить приложение
 Перейдите в раздел **Releases** (Релизы) в правой части страницы этого репозитория и скачайте скомпилированные автономные файлы, прикрепленные к последней версии:
 * `visual-reality-3hcp.exe` — Автономный исполняемый файл для Windows (запускается двойным щелчком, не требует установки библиотек или Python).
 * `visual-reality-3hcp-linux` — Автономный исполняемый файл для операционных систем Linux.
+* `visual-reality-3hcp-(mojo)-linux` — Автономный исполняемый файл для операционных систем Linux.(Mojo версия).
