@@ -23,7 +23,7 @@
 > **RU:** Этот раздел обновляется автоматически! Загрузите любую картинку с телефона в папку `input/test.png`. Облачные серверы GitHub Actions мгновенно обработают её, симулируя стандартное размытие нейросетевого апскейла (DLSS/TAA) против жесткого математического каркаса 3HCP.
 
 <p align="center">
-  <img src="output/comparison.gif" alt="Dynamic 3HCP Test Output" width="100%">
+  <img src="output/comparison.png" alt="Dynamic 3HCP Test Output" width="100%">
 </p>
 
 
