@@ -17,26 +17,27 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 1. Поднимаем чистый стандартный Python, который гарантированно есть на серверах GitHub
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+      # 1. Автономная установка Mojo на Windows через официальный системный скрипт Modular
+      # Этот метод вообще не использует Python и pip, поэтому конфликтов пакетов не будет
+      name: Install Mojo Compiler via PowerShell
+      run: |
+        Set-ExecutionPolicy RemoteSigned -Scope Process -Force
+        iex ((New-Object System.Net.WebClient).DownloadString('https://modular.com'))
+      shell: powershell
 
-      # 2. Установка компилятора Mojo напрямую из глобального реестра PIP
-      - name: Install Modular and Mojo Compiler
+      # 2. Принудительное добавление пути к mojo.exe в переменные окружения сервера
+      - name: Add Mojo to System PATH
         run: |
-          python -m pip install --upgrade pip
-          pip install modular
-        shell: pwsh
+          echo "$env:USERPROFILE\.modular\bin" >> $env:GITHUB_PATH
+        shell: powershell
 
-      # 3. Прямая сборка вашего кода в файл .exe без ToML-зависимостей и Pixi
+      # 3. Чистая и прямая компиляция вашего интерфейса в .exe файл
       - name: Compile Windows Executable
         run: |
           mojo build markov_user_interface.mojo -o visual-reality-3hcp.exe
         shell: pwsh
 
-      # 4. Отправка готового файла в раздел релизов на GitHub (для публичных версий)
+      # 4. Отправка готового файла в раздел релизов на GitHub
       - name: Upload Binary to Release
         uses: softprops/action-gh-release@v2
         if: github.event_name == 'release'
@@ -45,7 +46,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 5. Сохранение файла в архив действий (при ручном запуске кнопкой в привате)
+      # 5. Резервное сохранение файла в архив действий (при ручном запуске кнопкой)
       - name: Upload Artifacts if Manual Run
         uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
