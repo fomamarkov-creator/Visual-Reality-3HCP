@@ -17,24 +17,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 1. Скачиваем официальный портативный компилятор Mojo 1.0.0 напрямую без сайтов и скриптов
-      - name: Download Portable Mojo Compiler
-        run: |
-          Invoke-WebRequest -Uri "https://modular.com" -OutFile "mojo.zip"
-        shell: powershell
+      # 1. Установка официального скоростного менеджера uv
+      - name: Install uv Build Manager
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
 
-      # 2. Распаковываем архив компилятора в системную папку сервера
-      - name: Extract Mojo Compiler
+      # 2. Чистая глобальная установка компилятора Mojo 1.0.0 через официальный индекс Modular
+      - name: Install Mojo Compiler via uv
         run: |
-          Expand-Archive -Path "mojo.zip" -DestinationPath "D:\mojo-dist"
-          echo "D:\mojo-dist\bin" >> $env:GITHUB_PATH
-        shell: powershell
+          uv tool install mojo-compiler --index-url https://dl.modular.com/public/nightly/python/simple/
+        shell: bash
 
-      # 3. Чистая и прямая компиляция вашего интерфейса в исполняемый .exe файл
+      # 3. Прямая компиляция вашего интерфейса в исполняемый .exe файл
       - name: Compile Windows Executable
         run: |
-          & "D:\mojo-dist\bin\mojo.exe" build markov_user_interface.mojo -o visual-reality-3hcp.exe
-        shell: pwsh
+          mojo build markov_user_interface.mojo -o visual-reality-3hcp.exe
+        shell: bash
 
       # 4. Отправка готового .exe в раздел релизов на GitHub (для публичных версий)
       - name: Upload Binary to Release
@@ -45,7 +44,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 5. Сохранение .exe в архив артефактов (для ручного теста кнопкой в приватном репо)
+      # 5. Сохранение файла в системный архив при ручном запуске кнопкой
       - name: Upload Artifacts if Manual Run
         uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
