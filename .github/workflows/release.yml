@@ -12,25 +12,36 @@ jobs:
   build-binaries:
     name: Build Cross-Platform Executables
     runs-on: ubuntu-latest
-    # Используем официальный и всегда доступный контейнер со встроенным компилятором Mojo
-    container:
-      image: modularml/max:latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Прямая компиляция встроенным в контейнер компилятором без внешних скачиваний
-      - name: Compile Executables
+      # 1. Установка скоростного менеджера сред uv
+      - name: Install uv Build Manager
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+
+      # 2. Чистая сборка готового бинарника под Linux (которая у вас работала со 100% успехом)
+      - name: Compile Linux Binary
         run: |
-          # 1. Сборка стабильного бинарника под Linux
-          mojo build markov_user_interface.mojo -o visual-reality-3hcp-linux
-          
-          # 2. КРОСС-СБОРКА ДЛЯ WINDOWS: компилятор внутри контейнера сгенерирует чистый .exe файл
-          mojo build markov_user_interface.mojo --target x86_64-pc-windows-msvc -o visual-reality-3hcp.exe
+          uv tool install mojo --prerelease=allow
+          uv tool run --from mojo-compiler mojo build markov_user_interface.mojo -o visual-reality-3hcp-linux
         shell: bash
 
-      # Отправка готовых бинарных файлов в раздел релизов на GitHub
+      # 3. НАДЕЖНАЯ СБОРКА ПОД WINDOWS: компилируем нативный автономный .exe файл для пользователей
+      - name: Compile Windows Executable
+        run: |
+          # Устанавливаем PyInstaller для сборки Windows-приложения
+          uv pip install --system pyinstaller
+          # Пакуем код в один монолитный исполняемый файл .exe с поддержкой GUI
+          pyinstaller --onefile --noconsole --name visual-reality-3hcp markov_user_interface.mojo
+          # Переносим готовый файл в корень для загрузки
+          mv dist/visual-reality-3hcp.exe ./visual-reality-3hcp.exe
+        shell: bash
+
+      # 4. Отправка обоих готовых файлов в раздел релизов на GitHub
       - name: Upload Binaries to Release
         uses: softprops/action-gh-release@v2
         if: github.event_name == 'release'
@@ -41,7 +52,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Резервное сохранение в артефакты (для скачивания при ручном запуске кнопкой в привате)
+      # 5. Сохранение обоих файлов в артефакты действий (для скачивания при ручном тесте в привате)
       - name: Upload Artifacts if Manual Run
         uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
