@@ -3,7 +3,7 @@ name: Compile and Release Visual Reality 3HCP
 on:
   release:
     types: [published]
-  workflow_dispatch: # Позволяет запускать сборку вручную кнопкой в интерфейсе GitHub
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -16,9 +16,9 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            artifact_name: visual_reality_3hcp_linux
+            artifact_name: visual-reality-3hcp-linux
           - os: windows-latest
-            artifact_name: visual_reality_3hcp_windows.exe
+            artifact_name: visual-reality-3hcp-windows.exe
 
     steps:
       - name: Checkout repository
@@ -41,13 +41,13 @@ jobs:
 
       - name: Upload Binaries to Release
         uses: softprops/action-gh-release@v2
-        if: github.event_name == 'release' # Загружает в релиз только если это был триггер релиза
+        if: github.event_name == 'release'
         with:
           files: ${{ matrix.artifact_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Если запустили вручную кнопкой, просто сохраняем файлы в артефакты GitHub Actions
+      # Если запустили вручную кнопкой, сохраняем бинарники в артефакты сборки
       - name: Upload Artifacts if Manual Run
         uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
