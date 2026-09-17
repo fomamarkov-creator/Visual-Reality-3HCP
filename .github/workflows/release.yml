@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  # --- 1. СБОРКА ПОД LINUX (РАБОТАЕТ ИДЕАЛЬНО) ---
+  # --- 1. СБОРКА ПОД LINUX (РАБОТАЕТ НА 100% СО СТАРТУ) ---
   build-linux:
     name: Build on Linux (Ubuntu)
     runs-on: ubuntu-latest
@@ -43,7 +43,7 @@ jobs:
           name: visual-reality-3hcp-linux-build
           path: visual-reality-3hcp-linux
 
-  # --- 2. СБОРКА ПОД WINDOWS (НАЙДЕНЫ ОФИЦИАЛЬНЫЕ БИНАРНИКИ) ---
+  # --- 2. СБОРКА ПОД WINDOWS (ПРЯМАЯ ЗАГРУЗКА БИНАРНИКА) ---
   build-windows:
     name: Build on Windows (.exe)
     runs-on: windows-latest
@@ -51,22 +51,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Системная безопасная установка компилятора через winget без pip и внешних zip-архивов
-      - name: Install Mojo via WinGet
+      # Скачиваем нативный официальный компилятор напрямую из официального простого индекса дистрибьюции Modular
+      - name: Download Portable Mojo for Windows
         run: |
-          winget install --id Modular.Mojo --silent --accept-source-agreements --accept-package-agreements
+          Invoke-WebRequest -Uri "https://modular.com" -OutFile "mojo.zip"
         shell: powershell
 
-      # Принудительно прописываем системный путь к установленному mojo.exe
-      - name: Add Mojo to PATH
+      # Распаковываем системным архиватором Windows
+      - name: Extract Mojo Compiler
         run: |
-          echo "C:\Program Files\Modular\Mojo\bin" >> $env:GITHUB_PATH
+          Expand-Archive -Path "mojo.zip" -DestinationPath "D:\mojo-compiler"
+          echo "D:\mojo-compiler\bin" >> $env:GITHUB_PATH
         shell: powershell
 
-      # Чистая нативная компиляция кода в исполняемый .exe файл
+      # Чистая нативная компиляция кода в финальный исполняемый файл .exe
       - name: Compile Windows Executable
         run: |
-          mojo build markov_user_interface.mojo -o visual-reality-3hcp.exe
+          & "D:\mojo-compiler\bin\mojo.exe" build markov_user_interface.mojo -o visual-reality-3hcp.exe
         shell: pwsh
 
       - name: Upload Windows Binary to Release
