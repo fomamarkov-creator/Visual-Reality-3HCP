@@ -1,5 +1,17 @@
 [![DOI](https://zenodo.org/badge/1373783914.svg)](https://doi.org/10.5281/zenodo.22816257)
 
+## ⚡ Interactive Automated Test Bench / Интерактивный тестовый стенд
+
+> **EN:** This section updates automatically! Upload any image from your phone to the `input/test.png` folder. GitHub Actions cloud servers will immediately process it, simulating standard neural temporal accumulation blur (DLSS/TAA) versus our rigid mathematical 3HCP layout.
+>
+> **RU:** Этот раздел обновляется автоматически! Загрузите любую картинку с телефона в папку `input/test.png`. Облачные серверы GitHub Actions мгновенно обработают её, симулируя стандартное размытие нейросетевого апскейла (DLSS/TAA) против жесткого математического каркаса 3HCP.
+
+<p align="center">
+  <img src="output/comparison.png" alt="Dynamic 3HCP Test Output" width="100%">
+</p>
+
+---
+
 # 🌐 Visual Reality 3HCP (DLSS 5 Alternative)
 
 🚀 **Visual Reality 3HCP** is an ultra-fast computational core for fluid dynamics and neural rendering, built on the principles of **Discrete Spatial Matrices (DSM)** and modular phase mathematics in rings of residues. The engine was developed as a lightweight, mathematical alternative to heavy AI-upscalers (like NVIDIA DLSS 5), completely bypassing the need for dedicated Tensor Cores.
