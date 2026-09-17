@@ -24,24 +24,26 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Разворачиваем окружение и сразу активируем системные пути
-      - name: Setup Magic and Mojo
-        uses: prefix-dev/setup-pixi@v0.8.1
+      # Разворачиваем стандартный Python, который есть везде
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          run-install: false
-          activate-environment: true
+          python-data: '3.11'
 
+      # Ставим пакетный менеджер magic глобально через pip
       - name: Install Modular Magic Global
         run: |
           pip install modular-magic
 
+      # Скачиваем сам компилятор Mojo и зависимости проекта
       - name: Install Project Dependencies
         run: magic install
 
-      # Запускаем компиляцию строго внутри изолированного окружения проекта
+      # Компилируем бинарник строго через команду magic
       - name: Compile Executable Binary
         run: magic run build
 
+      # Загружаем готовые файлы в релиз (если запуск по кнопке релиза)
       - name: Upload Binaries to Release
         uses: softprops/action-gh-release@v2
         if: github.event_name == 'release'
@@ -50,7 +52,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Если запускаем вручную кнопкой в приватном репо, сохраняем файлы в архив GitHub
+      # Если запустили вручную кнопкой в приватном репо, сохраняем файлы в архив GitHub
       - name: Upload Artifacts if Manual Run
         uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
