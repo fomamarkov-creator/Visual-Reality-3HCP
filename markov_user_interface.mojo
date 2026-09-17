@@ -34,9 +34,15 @@ def run_markov_engine(mode: String, size_val: Int, steps_val: Int) raises:
     var view_density = np.zeros(shape, 'float32')
     var mid = size_val // 2
     
-    for j in range(mid - 4, mid + 4):
-        for i in range(mid - 4, mid + 4):
-            _ = view_density.__setitem__(PythonObject((j, i)), 240.0)
+    # Решение ошибки 1: Безопасное заполнение матрицы NumPy через встроенный генератор Python
+    var bridge = Python.dict()
+    bridge['matrix'] = view_density
+    bridge['low'] = mid - 4
+    bridge['high'] = mid + 4
+    _ = Python.evaluate(
+        "临 = [bridge['matrix'].__setitem__((j, i), 240.0) for j in range(bridge['low'], bridge['high']) for i in range(bridge['low'], bridge['high'])]",
+        bridge
+    )
     
     if mode == 'Медленный CPU-цикл':
         time.sleep(0.25)
@@ -111,26 +117,33 @@ def main() raises:
     _ = sld_steps.set(60)
     _ = sld_steps.pack(pady=2)
     
-    # Решение проблемы контекста: передаем ссылки на объекты через словарь
+    # Решение ошибки 2: Передаем ссылки на GUI без прямой записи Mojo-функции в словарь
     var context_bridge = Python.dict()
     context_bridge['cmb'] = cmb_mode
     context_bridge['size'] = sld_size
     context_bridge['steps'] = sld_steps
-    context_bridge['runner'] = run_markov_engine
     
-    # Создаем совместимый обработчик события нажатия кнопки
-    var on_click_launch = Python.evaluate(
-        "lambda ctx: ctx['runner'](str(ctx['cmb'].get()), int(ctx['size'].get()), int(ctx['steps'].get()))"
-    )
-    
+    # Прокси-функция для изоляции вызова от строгого компилятора
+    def on_click_launch():
+        try:
+            var m = str(context_bridge['cmb'].get())
+            var s = Int(context_bridge['size'].get())
+            var st = Int(context_bridge['steps'].get())
+            run_markov_engine(m, s, st)
+        except:
+            print("Ошибка чтения параметров интерфейса")
+            
+    # Конвертируем локальную функцию в совместимый коллбэк для Tkinter
     var font_btn = Python.evaluate("('Arial', 10, 'bold')")
+    var python_callback = Python.py_multi_delegate[on_click_launch]()
+    
     var btn_start = tk.Button(
         root, 
         text='ЗАПУСТИТЬ ПРОГРАММУ', 
         bg='darkblue', 
         fg='white', 
         font=font_btn, 
-        command=Python.evaluate("lambda: on_click(ctx)").bind(on_click=on_click_launch, ctx=context_bridge)
+        command=python_callback
     )
     _ = btn_start.pack(pady=20)
     
