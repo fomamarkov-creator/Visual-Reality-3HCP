@@ -21,6 +21,7 @@ def run_markov_engine(mode: String, size_val: Int, steps_val: Int) raises:
     var np = Python.import_module('numpy')
     var plt = Python.import_module('matplotlib.pyplot')
     var time = Python.import_module('time')
+    var builtins = Python.import_module('builtins')
     
     print('==================================================================')
     print('ЗАПУСК ЯДРА DSM МАРКОВА ЧЕРЕЗ ИНТЕРФЕЙС ПОЛЬЗОВАТЕЛЯ...')
@@ -29,14 +30,13 @@ def run_markov_engine(mode: String, size_val: Int, steps_val: Int) raises:
     
     var start_time = time.time()
     
-    # Формируем размеры и массив строго силами ядра Python
     var shape = Python.evaluate("({}, {})".format(size_val, size_val))
     var view_density = np.zeros(shape, 'float32')
     var mid = size_val // 2
     
-    # Вычисляем срез массива без использования конкатенации строк Mojo
-    var sl = Python.evaluate("slice({} - 4, {} + 4)".format(mid, mid))
-    _ = view_density.__setitem__(PythonObject((sl, sl)), 240.0)
+    for j in range(mid - 4, mid + 4):
+        for i in range(mid - 4, mid + 4):
+            _ = view_density.__setitem__(PythonObject((j, i)), 240.0)
     
     if mode == 'Медленный CPU-цикл':
         time.sleep(0.25)
@@ -71,7 +71,7 @@ def run_markov_engine(mode: String, size_val: Int, steps_val: Int) raises:
     _ = plt.savefig('visual_reality_3hcp_result.png', dpi=100)
     _ = plt.close()
     
-    print('Расчет успешно выполнен за:', round(calc_time, 2), 'мс!')
+    print('Расчет успешно выполнен за:', builtins.round(calc_time, 2), 'мс!')
     print('Результат сохранен в текущую папку: visual_reality_3hcp_result.png')
 
 def main() raises:
@@ -111,14 +111,27 @@ def main() raises:
     _ = sld_steps.set(60)
     _ = sld_steps.pack(pady=2)
     
-    def on_click_launch():
-        var m = cmb_mode.get()
-        var s = int(sld_size.get())
-        var st = int(sld_steps.get())
-        run_markov_engine(m, s, st)
-        
+    # Решение проблемы контекста: передаем ссылки на объекты через словарь
+    var context_bridge = Python.dict()
+    context_bridge['cmb'] = cmb_mode
+    context_bridge['size'] = sld_size
+    context_bridge['steps'] = sld_steps
+    context_bridge['runner'] = run_markov_engine
+    
+    # Создаем совместимый обработчик события нажатия кнопки
+    var on_click_launch = Python.evaluate(
+        "lambda ctx: ctx['runner'](str(ctx['cmb'].get()), int(ctx['size'].get()), int(ctx['steps'].get()))"
+    )
+    
     var font_btn = Python.evaluate("('Arial', 10, 'bold')")
-    var btn_start = tk.Button(root, text='ЗАПУСТИТЬ ПРОГРАММУ', bg='darkblue', fg='white', font=font_btn, command=on_click_launch)
+    var btn_start = tk.Button(
+        root, 
+        text='ЗАПУСТИТЬ ПРОГРАММУ', 
+        bg='darkblue', 
+        fg='white', 
+        font=font_btn, 
+        command=Python.evaluate("lambda: on_click(ctx)").bind(on_click=on_click_launch, ctx=context_bridge)
+    )
     _ = btn_start.pack(pady=20)
     
     print('Пользовательский интерфейс GUI Маркова успешно запущен!')
