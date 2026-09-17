@@ -9,50 +9,56 @@ permissions:
   contents: write
 
 jobs:
-  build-binaries:
-    name: Build Cross-Platform Executables
-    runs-on: ubuntu-latest
+  build-assets:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: visual-reality-3hcp-linux
+          - os: windows-latest
+            artifact_name: visual-reality-3hcp.exe
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 1. Официальный метод развертывания полноценной среды сборщика
-      - name: Setup Pixi Environment
+      # 1. Официальный и стабильный метод установки среды сборщика на любой ОС
+      - name: Setup Pixi Toolchain
         uses: prefix-dev/setup-pixi@v0.8.1
         with:
           run-install: false
 
-      # 2. КРОСС-КОМПИЛЯЦИЯ: Создаем Linux-бинарник и Windows .exe на одном сервере
-      - name: Compile Executables
+      # 2. Установка компилятора Mojo 1.0.0 из официального канала Modular
+      - name: Install Mojo Compiler
         run: |
-          # Устанавливаем компилятор Mojo, явно указав официальный канал репозитория Modular
-          pixi global install mojo -c https://conda.modular.com/max -c conda-forge
-          
-          # Сборка финальной версии под Linux для пользователей
-          $HOME/.pixi/bin/mojo build markov_user_interface.mojo -o visual-reality-3hcp-linux
-          
-          # Сборка готового стабильного релиза под Windows (.exe) через LLVM-таргет
-          $HOME/.pixi/bin/mojo build markov_user_interface.mojo --target x86_64-pc-windows-msvc -o visual-reality-3hcp.exe
-        shell: bash
+          pixi global install mojo -c https://modular.com -c conda-forge
 
-      # 3. Отправка обоих готовых файлов во вкладку релизов на GitHub
+      # 3. Чистая компиляция финальной версии программы (каждая ОС собирает свой бинарник)
+      - name: Compile Executable Binary (Ubuntu Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          $HOME/.pixi/bin/mojo build markov_user_interface.mojo -o ${{ matrix.artifact_name }}
+
+      - name: Compile Executable Binary (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          & "$env:USERPROFILE\.pixi\bin\mojo.exe" build markov_user_interface.mojo -o ${{ matrix.artifact_name }}
+
+      # 4. Отправка готовых файлов в раздел релизов на GitHub
       - name: Upload Binaries to Release
         uses: softprops/action-gh-release@v2
         if: github.event_name == 'release'
         with:
-          files: |
-            visual-reality-3hcp-linux
-            visual-reality-3hcp.exe
+          files: ${{ matrix.artifact_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 4. Резервное сохранение в артефакты действий (для скачивания при тесте кнопкой в привате)
+      # 5. Резервное сохранение в артефакты действий (для скачивания при ручном тесте по кнопке)
       - name: Upload Artifacts if Manual Run
         uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
         with:
-          name: visual-reality-3hcp-all-platforms
-          path: |
-            visual-reality-3hcp-linux
-            visual-reality-3hcp.exe
+          name: ${{ matrix.artifact_name }}-build
+          path: ${{ matrix.artifact_name }}
