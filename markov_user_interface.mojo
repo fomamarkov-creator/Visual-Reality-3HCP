@@ -1,3 +1,19 @@
+# ==============================================================================
+#  PROJECT: Visual Reality 3HCP
+#  MODULE:  Markov Spatial Matrix Core & Neural Rendering Engine
+# 
+#  Copyright (c) 2026 Visual Reality 3HCP Development Team. All rights reserved.
+#  Original Author: Efim S. Markov
+# 
+#  LICENSING NOTICE:
+#  This file is part of the Visual Reality 3HCP engine. This software is
+#  dual-licensed. You may use it under the terms of either:
+#  1. The GNU Affero General Public License v3.0 (AGPLv3) for open-source use.
+#  2. A Commercial Proprietary License obtained directly from the authors.
+# 
+#  For commercial licensing inquiries or modifications, please contact the team.
+# ==============================================================================
+
 from std.memory.alloc import alloc, dealloc, Layout
 from std.python import Python, PythonObject
 
