@@ -1,15 +1,5 @@
 [![DOI](https://zenodo.org/badge/1373783914.svg)](https://doi.org/10.5281/zenodo.22816257)
 
-## ⚡ Interactive Automated Test Bench / Интерактивный тестовый стенд
-
-> **EN:** This section updates automatically! Upload any image from your phone to the `input/test.png` folder. GitHub Actions cloud servers will immediately process it, simulating standard neural temporal accumulation blur (DLSS/TAA) versus our rigid mathematical 3HCP layout.
->
-> **RU:** Этот раздел обновляется автоматически! Загрузите любую картинку с телефона в папку `input/test.png`. Облачные серверы GitHub Actions мгновенно обработают её, симулируя стандартное размытие нейросетевого апскейла (DLSS/TAA) против жесткого математического каркаса 3HCP.
-
-<p align="center">
-  <img src="output/comparison.png" alt="Dynamic 3HCP Test Output" width="100%">
-</p>
-
 ---
 
 # 🌐 Visual Reality 3HCP (DLSS 5 Alternative)
@@ -25,6 +15,18 @@
 ---
 ## 🖼️ Visual Simulation Stand Output / Результат визуализации ядра
 ![Visual Reality 3HCP Core Output](visual_reality_3hcp_result.png)
+
+## ⚡ Interactive Automated Test Bench / Интерактивный тестовый стенд
+
+> **EN:** This section updates automatically! Upload any image from your phone to the `input/test.png` folder. GitHub Actions cloud servers will immediately process it, simulating standard neural temporal accumulation blur (DLSS/TAA) versus our rigid mathematical 3HCP layout.
+>
+> **RU:** Этот раздел обновляется автоматически! Загрузите любую картинку с телефона в папку `input/test.png`. Облачные серверы GitHub Actions мгновенно обработают её, симулируя стандартное размытие нейросетевого апскейла (DLSS/TAA) против жесткого математического каркаса 3HCP.
+
+<p align="center">
+  <img src="output/comparison.png" alt="Dynamic 3HCP Test Output" width="100%">
+</p>
+
+---
 
 ---
 
