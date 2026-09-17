@@ -24,16 +24,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Исправление бага lstat: создаем пустую папку-заглушку перед инициализацией
-      - name: Create Cache Directory Placeholder
-        run: |
-          mkdir -p .pixi
-        shell: bash
-
-      # 1. Разворачиваем изолированное окружение Pixi без капризного кэша
+      # 1. Разворачиваем изолированное окружение Pixi с явным указанием манифеста Mojo
       - name: Setup Pixi Environment
         uses: prefix-dev/setup-pixi@v0.8.1
         with:
+          manifest-path: 'mojoproject.toml' # Указываем Pixi искать именно ваш файл проекта
           run-install: true
           cache: false
 
