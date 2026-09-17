@@ -17,29 +17,29 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 1. Установка менеджера uv (на Linux он работает идеально)
+      # 1. Железобетонная установка менеджера сред uv
       - name: Install uv Build Manager
         uses: astral-sh/setup-uv@v5
         with:
           version: "latest"
 
-      # 2. Установка официального компилятора Mojo на Linux (проходит мгновенно)
+      # 2. Установка официального компилятора Mojo на Linux
       - name: Install Mojo Compiler
         run: |
           uv tool install mojo --prerelease=allow
         shell: bash
 
-      # 3. КРОСС-КОМПИЛЯЦИЯ: Собираем файлы для Linux и для Windows на одном сервере
+      # 3. КРОСС-КОМПИЛЯЦИЯ через вызов uvx (решает проблему command not found)
       - name: Compile Executables
         run: |
-          # Сборка под Linux
-          mojo build markov_user_interface.mojo -o visual-reality-3hcp-linux
+          # Сборка под Linux через изолированное окружение uvx
+          uvx mojo build markov_user_interface.mojo -o visual-reality-3hcp-linux
           
-          # Кросс-сборка под Windows (генерирует .exe без наличия Windows-сервера!)
-          mojo build markov_user_interface.mojo --target x86_64-pc-windows-msvc -o visual-reality-3hcp.exe
+          # Кросс-сборка под Windows (генерирует рабочий .exe прямо на Linux-сервере)
+          uvx mojo build markov_user_interface.mojo --target x86_64-pc-windows-msvc -o visual-reality-3hcp.exe
         shell: bash
 
-      # 4. Отправка обоих файлов в релизы GitHub (для публичных версий)
+      # 4. Отправка обоих готовых файлов в раздел релизов на GitHub
       - name: Upload Binaries to Release
         uses: softprops/action-gh-release@v2
         if: github.event_name == 'release'
@@ -50,7 +50,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 5. Сохранение обоих файлов в архиве Actions при ручном тесте (для привата)
+      # 5. Сохранение обоих файлов в архиве Actions при ручном тесте кнопкой
       - name: Upload Artifacts if Manual Run
         uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
