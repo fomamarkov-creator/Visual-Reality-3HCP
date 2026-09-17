@@ -9,35 +9,48 @@ permissions:
   contents: write
 
 jobs:
-  build-linux:
-    name: Build Executable on Linux Container
-    runs-on: ubuntu-latest
-    # Используем официальный контейнер, где Mojo 1.0.0 уже вшит внутрь
-    container:
-      image: ghcr.io/modularml/mojo:latest
+  build-assets:
+    name: Build Executable
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: visual-reality-3hcp
+          - os: windows-latest
+            artifact_name: visual-reality-3hcp.exe
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Компилируем бинарный файл напрямую встроенным компилятором без curl и лишних утилит
-      - name: Compile Executable Binary
-        run: |
-          mojo build markov_user_interface.mojo -o visual-reality-3hcp
+      # 1. Официальный и стабильный метод установки среды сборки без curl-команд
+      - name: Set up Magic Build Tool
+        uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          run-install: false
 
-      # Автоматическое прикрепление файла к релизу (для публичных версий)
+      # 2. Инициализация проекта и автоматическая загрузка компилятора Mojo 1.0.0
+      - name: Install Project Dependencies and Mojo
+        run: pixi install
+
+      # 3. Компиляция бинарных файлов (используем прямой вызов pixi run)
+      - name: Compile Executable Binary
+        run: pixi run build
+
+      # 4. Загрузка файлов в раздел релизов на GitHub
       - name: Upload Binaries to Release
         uses: softprops/action-gh-release@v2
         if: github.event_name == 'release'
         with:
-          files: visual-reality-3hcp
+          files: ${{ matrix.artifact_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Сохранение бинарника в архиве (при ручном тесте по кнопке в приватном репо)
+      # 5. Сохранение в архив артефактов (для ручного теста кнопкой в приватном репо)
       - name: Upload Artifacts if Manual Run
         uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
         with:
-          name: visual-reality-3hcp-linux-build
-          path: visual-reality-3hcp
+          name: ${{ matrix.artifact_name }}-build
+          path: ${{ matrix.artifact_name }}
