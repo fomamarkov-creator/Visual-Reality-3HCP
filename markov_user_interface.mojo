@@ -28,30 +28,27 @@ def run_markov_engine(mode: String, size_val: Int, steps_val: Int) raises:
     print('==================================================================')
     
     var start_time = time.time()
-    var N = size_val
-    var M = size_val
     
-    # 1. Исправлено создание многомерного массива для строгого компилятора
-    var shape = List[Int](M, N)
+    # Формируем кортеж размеров строго силами Python
+    var shape = Python.evaluate("({}, {})".format(size_val, size_val))
     var view_density = np.zeros(shape, 'float32')
     var mid = size_val // 2
     
-    # 2. Исправлен срез массива NumPy через вызов встроенного оценщика выражений Python
-    var sl = Python.evaluate("slice(" + str(mid - 4) + "," + str(mid + 4) + ")")
+    # Вычисляем срез массива без использования конкатенации строк Mojo
+    var sl = Python.evaluate("slice({} - 4, {} + 4)".format(mid, mid))
     _ = view_density.__setitem__(PythonObject((sl, sl)), 240.0)
     
     if mode == 'Медленный CPU-цикл':
         time.sleep(0.25)
         
-    var x_line = np.linspace(-3.1415, 3.1415, N)
-    var y_line = np.linspace(-3.1415, 3.1415, M)
+    var x_line = np.linspace(-3.1415, 3.1415, size_val)
+    var y_line = np.linspace(-3.1415, 3.1415, size_val)
     var mesh = np.meshgrid(x_line, y_line)
     var view_velocity = np.sin(mesh) * np.cos(mesh) * 15.0
     var view_dlss5_frame = np.mod(view_density + view_velocity * 45.0, 256.0) / 255.0
     var calc_time = (time.time() - start_time) * 1000.0
     
-    # Исправлена передача параметров отображения графиков
-    var size_tuple = List[Int](15, 5)
+    var size_tuple = Python.evaluate("(15, 5)")
     var fig = plt.figure(figsize=size_tuple)
     _ = fig.suptitle('Efim S. Markov Core: DSM User Testing Stand', fontsize=12)
     
@@ -85,8 +82,7 @@ def main() raises:
     _ = root.title('Visual Reality 3HCP Launcher v1.0')
     _ = root.geometry('450x350')
     
-    # Исправленная передача параметров шрифтов для Tkinter
-    var font_title = List[PythonObject]('Arial', 12, 'bold')
+    var font_title = Python.evaluate("('Arial', 12, 'bold')")
     var lbl_title = tk.Label(root, text='ДВИЖОК МАРКОВА: ТЕСТОВЫЙ СТЕНД DLSS 5', font=font_title)
     _ = lbl_title.pack(pady=10)
     
@@ -96,7 +92,7 @@ def main() raises:
     var lbl_mode = tk.Label(frame_mode, text='Вычислительный режим:')
     _ = lbl_mode.pack(side='left', padx=5)
     
-    var combo_values = List[String]('Быстрый векторный GPU/Mojo', 'Медленный CPU-цикл')
+    var combo_values = Python.evaluate("['Быстрый векторный GPU/Mojo', 'Медленный CPU-цикл']")
     var cmb_mode = ttk.Combobox(frame_mode, values=combo_values)
     _ = cmb_mode.current(0)
     _ = cmb_mode.pack(side='left', padx=5)
@@ -121,7 +117,7 @@ def main() raises:
         var st = int(sld_steps.get())
         run_markov_engine(m, s, st)
         
-    var font_btn = List[PythonObject]('Arial', 10, 'bold')
+    var font_btn = Python.evaluate("('Arial', 10, 'bold')")
     var btn_start = tk.Button(root, text='ЗАПУСТИТЬ ТЕСТ ЯДРА', bg='darkblue', fg='white', font=font_btn, command=on_click_launch)
     _ = btn_start.pack(pady=20)
     
