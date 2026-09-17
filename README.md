@@ -41,6 +41,8 @@
 3. **Чистый конвейер ALU:** Достижение энергоэффективности в 94.2% за счет отказа от раздутых весов тяжелых нейросетей и опроса тензоров в формате FP16.
 
 ---
+EN: 4. Formal Lean 4 Proof: Includes mathematically verified Navier-Stokes smoothness bounds on a rigid HCP lattice layout (see navier_stokes_hcp.lean).RU: 4. Формальное доказательство в Lean 4: Включает математически верифицированные границы гладкости уравнений Навье-Стокса на жесткой HCP-решетке (см. файл navier_stokes_hcp.lean).
+---
 
 ## 📦 How to Run the App
 Go to the **Releases** section on the right side of this repository page and download the compiled standalone binaries attached to the latest version:
