@@ -12,11 +12,3 @@ max-mojo = ">=1.0.0"
 [tasks]
 run = "mojo markov_user_interface.mojo"
 build = "mojo build markov_user_interface.mojo"
-
-[target.linux-64.tasks]
-run = "mojo markov_user_interface.mojo"
-build = "mojo build markov_user_interface.mojo"
-
-[target.win-64.tasks]
-run = "mojo.exe markov_user_interface.mojo"
-build = "mojo build markov_user_interface.mojo"
