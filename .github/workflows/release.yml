@@ -17,27 +17,26 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 1. Разворачиваем стандартный Python, который есть на серверах GitHub по умолчанию
+      # 1. Поднимаем чистый Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      # 2. Устанавливаем официальный magic глобально через pip
-      - name: Install Modular Magic via PIP
+      # 2. Установка Mojo компилятора через официальный PIP-пакет от Modular
+      - name: Install Modular and Mojo Compiler
         run: |
           python -m pip install --upgrade pip
-          pip install modular-magic
+          pip install modular
+        shell: pwsh
 
-      # 3. Скачиваем компилятор Mojo и собираем зависимости проекта
-      - name: Install Windows Mojo Compiler
-        run: magic install
-
-      # 4. Компилируем ваш интерфейс напрямую в исполняемый .exe файл
+      # 3. Прямая компиляция без каких-либо toml-зависимостей и прослоек
       - name: Compile Windows Executable
-        run: magic run build
+        run: |
+          mojo build markov_user_interface.mojo -o visual-reality-3hcp.exe
+        shell: pwsh
 
-      # 5. Загрузка в релиз (если запуск по кнопке публикации релиза)
+      # 4. Отправка готового .exe в релизы GitHub
       - name: Upload Binary to Release
         uses: softprops/action-gh-release@v2
         if: github.event_name == 'release'
@@ -46,7 +45,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 6. Сохранение .exe в архив GitHub Actions (при тесте кнопкой в приватном репо)
+      # 5. Сохранение файла в архиве действий при ручном запуске тестов
       - name: Upload Artifacts if Manual Run
         uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
