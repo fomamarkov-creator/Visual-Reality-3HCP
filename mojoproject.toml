@@ -10,4 +10,4 @@ platforms = ["linux-64", "win-64"]
 max-mojo = ">=1.0.0"
 
 [tasks]
-build = "mojo build markov_user_interface.mojo"
+build = "mojo build markov_user_interface.mojo -o markov_user_interface"
