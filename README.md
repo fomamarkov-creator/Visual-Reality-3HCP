@@ -9,6 +9,10 @@
 🚀 **Visual Reality 3HCP** — это сверхбыстрое вычислительное ядро гидродинамики и нейронного рендеринга, построенное на принципах **дискретных пространственных матриц (DSM)** и модульной фазовой математики в кольцах вычетов. Движок разработан как легковесная математическая альтернатива тяжеловесным ИИ-апскейлерам (таким как NVIDIA DLSS 5), полностью исключающая необходимость в специализированных тензорных ядрах (Tensor Cores).
 
 ---
+## 🖼️ Visual Simulation Stand Output / Результат визуализации ядра
+![Visual Reality 3HCP Core Output](visual_reality_3hcp_result.png)
+
+---
 
 ## 📊 Hardware Test Results (NVIDIA Tesla T4)
 * **Grid Resolution:** Extreme 3D Grid (256x256x32) — over **2,097,152 active cells**.
