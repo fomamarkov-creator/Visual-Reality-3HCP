@@ -13,11 +13,10 @@ max-mojo = ">=1.0.0"
 run = "mojo markov_user_interface.mojo"
 build = "mojo build markov_user_interface.mojo"
 
-# Специальные переопределения для разных ОС (используем строго дефисы в именах выходных файлов)
 [target.linux-64.tasks]
 run = "mojo markov_user_interface.mojo"
-build = "mojo build markov_user_interface.mojo -o visual-reality-3hcp-linux"
+build = "mojo build markov_user_interface.mojo"
 
 [target.win-64.tasks]
 run = "mojo.exe markov_user_interface.mojo"
-build = "mojo build markov_user_interface.mojo -o visual-reality-3hcp-windows.exe"
+build = "mojo build markov_user_interface.mojo"
