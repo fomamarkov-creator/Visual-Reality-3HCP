@@ -1,0 +1,46 @@
+name: Compile and Release Visual Reality 3HCP
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build-assets:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: visual_reality_3hcp_linux
+          - os: windows-latest
+            artifact_name: visual_reality_3hcp_windows.exe
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Mojo Compiler
+        uses: modularto/action-setup-max@v1
+        with:
+          components: 'mojo'
+
+      - name: Install Magic Packet Manager
+        run: |
+          pip install modular-magic
+
+      - name: Install Project Dependencies
+        run: magic install
+
+      - name: Compile Executable Binary
+        run: magic run build
+
+      - name: Upload Binaries to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ matrix.artifact_name }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
