@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build-assets:
-    name: Build on Linux and Windows
+    name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -24,29 +24,29 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 1. Поднимаем чистое и стабильное Python-окружение
+      # 1. Поднимаем стандартное и чистое Python-окружение
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      # 2. Устанавливаем официальный magic глобально через pip
-      - name: Install Modular Magic via PIP
+      # 2. Устанавливаем официальный компилятор Mojo напрямую через pip
+      - name: Install Mojo Compiler via PIP
         run: |
           python -m pip install --upgrade pip
-          pip install modular-magic
+          pip install mojo
 
       # 3. Чистая нативная компиляция исполняемых файлов без сторонних плагинов
       - name: Compile Executable Binary (Linux)
         if: matrix.os == 'ubuntu-latest'
         run: |
-          magic global run mojo build markov_user_interface.mojo -o ${{ matrix.artifact_name }}
+          mojo build markov_user_interface.mojo -o ${{ matrix.artifact_name }}
         shell: bash
 
       - name: Compile Executable Binary (Windows)
         if: matrix.os == 'windows-latest'
         run: |
-          magic global run mojo build markov_user_interface.mojo -o ${{ matrix.artifact_name }}
+          mojo build markov_user_interface.mojo -o ${{ matrix.artifact_name }}
         shell: pwsh
 
       # 4. Отправка готовых файлов в раздел релизов на GitHub
