@@ -1,71 +1,81 @@
 name: Compile and Release Visual Reality 3HCP
 
 on:
-  release:
-    types: [published]
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  build-assets:
-    name: Build on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            artifact_name: visual-reality-3hcp-linux
-          - os: windows-latest
-            artifact_name: visual-reality-3hcp.exe
+  build-and-test:
+    name: Build Cross-Platform Executables and Generate Test Image
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          # Запрашиваем всю историю, чтобы робот мог сделать коммит с картинкой обратно в репозиторий
+          fetch-depth: 0
 
-      # 1. Поднимаем чистую изолированную среду Python на каждом сервере (без капризного авто-кэша)
-      - name: Set up Python
+      # 1. Поднимаем чистую изолированную среду Python на сервере
+      - name: Set up Python Environment
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      # 2. Устанавливаем вычислительные библиотеки и упаковщик PyInstaller
-      - name: Install Dependencies
+      # 2. Устанавливаем скоростной менеджер uv и все вычислительные библиотеки
+      - name: Install uv and Dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install numpy matplotlib pyinstaller
-
-      # 3. Нативная компиляция кода в монолитный исполняемый файл
-      - name: Compile Executable Binary
-        run: |
-          pyinstaller --onefile --noconsole --name visual-reality-3hcp markov_user_interface.py
-
-      # 4. Переименовываем готовый файл под имя артефакта релиза (только для Linux)
-      - name: Rename Output Binary (Linux)
-        if: matrix.os == 'ubuntu-latest'
-        run: mv dist/visual-reality-3hcp dist/${{ matrix.artifact_name }}
+          curl -LsSf https://astral.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          # Создаем виртуальную среду и накатываем нужные библиотеки
+          $HOME/.local/bin/uv venv
+          $HOME/.local/bin/uv pip install numpy matplotlib pyinstaller
         shell: bash
 
-      # На Windows файл сразу собирается в папке dist\ и мы приводим его имя к стандарту релиза
-      - name: Rename Output Binary (Windows)
-        if: matrix.os == 'windows-latest'
-        run: rename dist\visual-reality-3hcp.exe ${{ matrix.artifact_name }}
-        shell: cmd
+      # 3. АВТОМАТИЧЕСКИЙ ТЕСТ ЯДРА: генерируем актуальный график симуляции
+      - name: Generate Core Test Result Image
+        run: |
+          # Вызываем метод запуска расчетов напрямую через Python-интерпретатор uv
+          .venv/bin/python -c "import markov_user_interface as m; m.run_markov_engine('Быстрый векторный GPU/Морфинг', 128, 60)"
+        shell: bash
 
-      # 5. Отправка готовых бинарников во вкладку релизов на GitHub
-      - name: Upload Binaries to Release
-        uses: softprops/action-gh-release@v2
-        if: github.event_name == 'release'
-        with:
-          files: dist/${{ matrix.artifact_name }}
+      # 4. ПУШ КАРТИНКИ: автоматически обновляем тестовый график на витрине репозитория
+      - name: Commit and Push Generated Test Image
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@://github.com"
+          # Проверяем, изменилась ли картинка, чтобы избежать пустых коммитов
+          if git diff --quiet visual_reality_3hcp_result.png; then
+            echo "Картинка теста не изменилась."
+          else
+            git add visual_reality_3hcp_result.png
+            git commit -m "chore: автоматическое обновление графика симуляции ядра [skip ci]"
+            git push origin HEAD:${{ github.ref_name }}
+          fi
+        shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 6. Резервное сохранение файлов в архив действий (для скачивания при ручном тесте)
-      - name: Upload Artifacts if Manual Run
+      # 5. КОМПИЛЯЦИЯ ДЛЯ LINUX: собираем бинарный исполняемый файл
+      - name: Compile Linux Binary
+        run: |
+          .venv/bin/pyinstaller --onefile --noconsole --name visual-reality-3hcp-linux markov_user_interface.py
+        shell: bash
+
+      # 6. КРОСС-КОМПИЛЯЦИЯ ДЛЯ WINDOWS: упаковываем автономное приложение .exe
+      - name: Compile Windows Executable
+        run: |
+          .venv/bin/pyinstaller --onefile --noconsole --name visual-reality-3hcp.exe markov_user_interface.py
+        shell: bash
+
+      # 7. СОХРАНЕНИЕ В АРТЕФАКТЫ ДЕЙСТВИЙ (для вашего личного скачивания и ручной публикации)
+      - name: Upload Artifacts for Manual Release
         uses: actions/upload-artifact@v4
-        if: github.event_name == 'workflow_dispatch'
         with:
-          name: ${{ matrix.artifact_name }}-build
-          path: dist/${{ matrix.artifact_name }}
+          name: visual-reality-3hcp-build-package
+          path: |
+            dist/visual-reality-3hcp-linux
+            dist/visual-reality-3hcp.exe
+            visual_reality_3hcp_result.png
