@@ -24,21 +24,31 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Корректный, официально существующий экшен сборщика от разработчиков
-      - name: Set up Magic Build Tool
-        uses: prefix-dev/setup-pixi@v0.8.1
-        with:
-          run-install: false
+      # 1. Прямая установка Magic на Linux без использования сторонних экшенов
+      - name: Install Magic Build Tool (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          curl -sSL https://modular.com | bash
+          echo "$HOME/.modular/bin" >> $GITHUB_PATH
+        shell: bash
 
-      # Загрузка компилятора Mojo и зависимостей на базе mojoproject.toml
+      # 2. Прямая установка Magic на Windows через системный PowerShell
+      - name: Install Magic Build Tool (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          irm https://modular.com/win | iex
+          echo "$env:USERPROFILE\.modular\bin" >> $env:GITHUB_PATH
+        shell: powershell
+
+      # 3. Скачивание компилятора Mojo 1.0 и всех библиотек на основе mojoproject.toml
       - name: Install Project Dependencies and Mojo
         run: magic install
 
-      # Сборка готовых бинарных файлов проекта
+      # 4. Компиляция бинарных файлов программы
       - name: Compile Executable Binary
         run: magic run build
 
-      # Отправка собранного ПО в раздел релизов на GitHub
+      # 5. Автоматическое прикрепление файлов к релизу (для публичных версий)
       - name: Upload Binaries to Release
         uses: softprops/action-gh-release@v2
         if: github.event_name == 'release'
@@ -47,7 +57,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Резервное копирование файлов в артефакты (при ручном тесте по кнопке)
+      # 6. Сохранение бинарников в архиве GitHub (при ручном тесте в приватном репо)
       - name: Upload Artifacts if Manual Run
         uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
