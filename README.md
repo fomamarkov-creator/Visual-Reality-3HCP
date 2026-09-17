@@ -1,8 +1,8 @@
-# 🌐 Markov DSM Engine (DLSS 5 Alternative)
+# 🌐 Visual Reality 3HCP (DLSS 5 Alternative)
 
+[Русская версия ниже]
 
-
-🚀 **Markov DSM Engine** is an ultra-fast computational core for fluid dynamics and neural rendering, built on the principles of **Discrete Spatial Matrices (DSM)** and modular phase mathematics in rings of residues. The engine was developed as a lightweight, mathematical alternative to heavy AI-upscalers (like NVIDIA DLSS 5), completely bypassing the need for dedicated Tensor Cores.
+🚀 **Visual Reality 3HCP** is an ultra-fast computational core for fluid dynamics and neural rendering, built on the principles of **Discrete Spatial Matrices (DSM)** and modular phase mathematics in rings of residues. The engine was developed as a lightweight, mathematical alternative to heavy AI-upscalers (like NVIDIA DLSS 5), completely bypassing the need for dedicated Tensor Cores.
 
 ## 📊 Hardware Test Results (NVIDIA Tesla T4)
 * **Grid Resolution:** Extreme 3D Grid (256x256x32) — over **2,097,152 active cells**.
@@ -22,9 +22,9 @@ Go to the **Actions** tab in the top menu of this repository, select the latest 
 
 ---
 
-# 🌐 Markov DSM Engine (Альтернатива DLSS 5)
+# 🌐 Visual Reality 3HCP (Альтернатива DLSS 5)
 
-🚀 **Markov DSM Engine** — это сверхбыстрое вычислительное ядро для гидродинамики и нейронного рендеринга, построенное на принципах **дискретных пространственных матриц (DSM)** и модулярной фазовой математики в кольцах вычетов. Движок разработан как легковесная математическая альтернатива тяжелым ИИ-апскейлерам (вроде NVIDIA DLSS 5), полностью исключающая потребность в выделенных тензорных ядрах.
+🚀 **Visual Reality 3HCP** — это сверхбыстрое вычислительное ядро для гидродинамики и нейронного рендеринга, построенное на принципах **дискретных пространственных матриц (DSM)** и модулярной фазовой математики в кольцах вычетов. Движок разработан как легковесная математическая альтернатива тяжелым ИИ-апскейлерам (вроде NVIDIA DLSS 5), полностью исключающая потребность в выделенных тензорных ядрах.
 
 ## 📊 Результаты аппаратных тестов (NVIDIA Tesla T4)
 * **Разрешение сетки:** Extreme 3D Grid (256x256x32) — более **2 097 152 активных узлов**.
