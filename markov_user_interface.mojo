@@ -29,7 +29,7 @@ def run_markov_engine(mode: String, size_val: Int, steps_val: Int) raises:
     
     var start_time = time.time()
     
-    # Формируем кортеж размеров строго силами Python
+    # Формируем размеры и массив строго силами ядра Python
     var shape = Python.evaluate("({}, {})".format(size_val, size_val))
     var view_density = np.zeros(shape, 'float32')
     var mid = size_val // 2
@@ -50,7 +50,7 @@ def run_markov_engine(mode: String, size_val: Int, steps_val: Int) raises:
     
     var size_tuple = Python.evaluate("(15, 5)")
     var fig = plt.figure(figsize=size_tuple)
-    _ = fig.suptitle('Efim S. Markov Core: DSM User Testing Stand', fontsize=12)
+    _ = fig.suptitle('Visual Reality 3HCP Core: User Stand', fontsize=12)
     
     var ax1 = fig.add_subplot(1, 3, 1)
     _ = ax1.set_title('Fluid Density (rho_e)')
@@ -83,7 +83,7 @@ def main() raises:
     _ = root.geometry('450x350')
     
     var font_title = Python.evaluate("('Arial', 12, 'bold')")
-    var lbl_title = tk.Label(root, text='ДВИЖОК МАРКОВА: ТЕСТОВЫЙ СТЕНД DLSS 5', font=font_title)
+    var lbl_title = tk.Label(root, text='ДВИЖОК МАРКОВА: СТЕНД РЕЛИЗА DLSS 5', font=font_title)
     _ = lbl_title.pack(pady=10)
     
     var frame_mode = tk.Frame(root)
@@ -118,7 +118,7 @@ def main() raises:
         run_markov_engine(m, s, st)
         
     var font_btn = Python.evaluate("('Arial', 10, 'bold')")
-    var btn_start = tk.Button(root, text='ЗАПУСТИТЬ ТЕСТ ЯДРА', bg='darkblue', fg='white', font=font_btn, command=on_click_launch)
+    var btn_start = tk.Button(root, text='ЗАПУСТИТЬ ПРОГРАММУ', bg='darkblue', fg='white', font=font_btn, command=on_click_launch)
     _ = btn_start.pack(pady=20)
     
     print('Пользовательский интерфейс GUI Маркова успешно запущен!')
