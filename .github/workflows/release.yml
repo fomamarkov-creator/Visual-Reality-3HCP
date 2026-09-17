@@ -18,12 +18,11 @@ jobs:
         uses: actions/checkout@v4
 
       # 1. Автономная установка Mojo на Windows через официальный системный скрипт Modular
-      # Этот метод вообще не использует Python и pip, поэтому конфликтов пакетов не будет
-      name: Install Mojo Compiler via PowerShell
-      run: |
-        Set-ExecutionPolicy RemoteSigned -Scope Process -Force
-        iex ((New-Object System.Net.WebClient).DownloadString('https://modular.com'))
-      shell: powershell
+      - name: Install Mojo Compiler via PowerShell
+        run: |
+          Set-ExecutionPolicy RemoteSigned -Scope Process -Force
+          iex ((New-Object System.Net.WebClient).DownloadString('https://modular.com'))
+        shell: powershell
 
       # 2. Принудительное добавление пути к mojo.exe в переменные окружения сервера
       - name: Add Mojo to System PATH
