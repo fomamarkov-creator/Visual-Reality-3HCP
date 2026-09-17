@@ -28,14 +28,14 @@ jobs:
       - name: Install Magic Build Tool (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
         run: |
-          curl -ssL https://magic.modular.com | sh
+          curl -ssL https://modular.com | sh
           echo "$HOME/.modular/bin" >> $GITHUB_PATH
         shell: bash
 
       - name: Install Magic Build Tool (Windows)
         if: matrix.os == 'windows-latest'
         run: |
-          irm https://modular.com | iex
+          irm https://modular.com/win | iex
           echo "$env:USERPROFILE\.modular\bin" >> $env:GITHUB_PATH
         shell: powershell
 
@@ -58,7 +58,7 @@ jobs:
 
       # 5. Сохранение в артефакты (при ручном тесте по кнопке в приватном репо)
       - name: Upload Artifacts if Manual Run
-        uses: actions/artifact@v4
+        uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
         with:
           name: ${{ matrix.artifact_name }}-build
