@@ -1,7 +1,7 @@
 [project]
-name = "markov-ns-solver"
+name = "visual-reality-3hcp"
 version = "0.1.0"
-description = "Efim S. Markov: 12-Fold Spatial Matrix Core & Neural Rendering Engine (DLSS 5 Alternative)"
+description = "Visual Reality 3HCP: 12-Fold Spatial Matrix Core & Neural Rendering Engine"
 authors = ["Efim S. Markov <visual-reality-3hcp@example.com>"]
 channels = ["conda-forge", "modular-channels"]
 platforms = ["linux-64", "win-64"]
@@ -11,10 +11,13 @@ max-mojo = ">=1.0.0"
 
 [tasks]
 run = "mojo markov_user_interface.mojo"
+build = "mojo build markov_user_interface.mojo"
 
-# Специальные переопределения команд запуска для разных ОС относительно корня репозитория
+# Специальные переопределения для разных ОС
 [target.linux-64.tasks]
 run = "mojo markov_user_interface.mojo"
+build = "mojo build markov_user_interface.mojo -o visual_reality_3hcp_linux"
 
 [target.win-64.tasks]
 run = "mojo.exe markov_user_interface.mojo"
+build = "mojo build markov_user_interface.mojo -o visual_reality_3hcp_windows.exe"
