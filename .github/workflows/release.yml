@@ -24,29 +24,37 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 1. Официальный метод развертывания среды сборщика от разработчиков языка
-      - name: Setup Pixi Toolchain
-        uses: prefix-dev/setup-pixi@v0.8.1
+      # 1. Поднимаем стандартное и чистое Python-окружение (есть на всех серверах GitHub)
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          run-install: false
+          python-version: '3.11'
 
-      # 2. Установка компилятора Mojo 1.0.0 из проверенного и точного канала Modular
-      - name: Install Mojo Compiler
-        run: |
-          pixi global install mojo -c https://modular.com -c conda-forge
-
-      # 3. Чистая компиляция финальной версии программы (каждая ОС собирает свой бинарник)
-      - name: Compile Executable Binary (Ubuntu Linux)
+      # --- ШАГ ДЛЯ LINUX (Сборка через быстрый uv) ---
+      - name: Install uv and Compile (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
         run: |
-          $HOME/.pixi/bin/mojo build markov_user_interface.mojo -o ${{ matrix.artifact_name }}
+          curl -LsSf https://astral.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          uv run --with mojo-compiler mojo build markov_user_interface.mojo -o ${{ matrix.artifact_name }}
+        shell: bash
 
-      - name: Compile Executable Binary (Windows)
+      # --- ШАГ ДЛЯ WINDOWS (Чистая сборка через pip без Pixi) ---
+      - name: Install Mojo via PIP (Windows)
         if: matrix.os == 'windows-latest'
         run: |
-          & "$env:USERPROFILE\.pixi\bin\mojo.exe" build markov_user_interface.mojo -o ${{ matrix.artifact_name }}
+          python -m pip install --upgrade pip
+          pip install mojo
+        shell: pwsh
 
-      # 4. Отправка готовых файлов в раздел релизов на GitHub
+      # Компилируем готовый .exe файл для использования пользователями
+      - name: Compile Windows Executable (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          mojo build markov_user_interface.mojo -o ${{ matrix.artifact_name }}
+        shell: pwsh
+
+      # --- ОТПРАВКА ГОТОВЫХ ФАЙЛОВ В РЕЛИЗЫ ---
       - name: Upload Binaries to Release
         uses: softprops/action-gh-release@v2
         if: github.event_name == 'release'
@@ -55,7 +63,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 5. Резервное сохранение в артефакты действий (для скачивания при ручном тесте по кнопке)
+      # Резервное сохранение в артефакты действий (для ручного теста кнопкой в привате)
       - name: Upload Artifacts if Manual Run
         uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
