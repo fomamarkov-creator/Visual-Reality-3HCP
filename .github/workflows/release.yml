@@ -24,27 +24,33 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 1. Разворачиваем изолированное окружение Pixi (работает на обеих ОС)
+      # Исправление бага lstat: создаем пустую папку-заглушку перед инициализацией
+      - name: Create Cache Directory Placeholder
+        run: |
+          mkdir -p .pixi
+        shell: bash
+
+      # 1. Разворачиваем изолированное окружение Pixi без капризного кэша
       - name: Setup Pixi Environment
         uses: prefix-dev/setup-pixi@v0.8.1
         with:
-          run-install: true # Pixi сам прочитает mojoproject.toml и поставит Mojo 1.0.0
+          run-install: true
+          cache: false
 
-      # 2. Чистая нативная компиляция силами самого Mojo (без Питина и PyInstaller)
+      # 2. Чистая нативная компиляция силами самого Mojo
       - name: Compile Executable Binary
         run: |
           pixi run build
 
-      # 3. Переименовываем готовый файл под имя артефакта
+      # 3. Переименовываем готовый файл под имя артефакта релиза
       - name: Rename Output Binary (Linux)
         if: matrix.os == 'ubuntu-latest'
         run: mv markov_user_interface ${{ matrix.artifact_name }}
         shell: bash
 
-      # На Windows файл сразу соберется с правильным расширением .exe на шаге pixi run build
       - name: Rename Output Binary (Windows)
         if: matrix.os == 'windows-latest'
-        run: rename markov_user_interface.exe ${{ matrix.artifact_name }}
+        run: rename markov_user_interface ${{ matrix.artifact_name }}
         shell: cmd
 
       # 4. Отправка готовых файлов в раздел релизов на GitHub
