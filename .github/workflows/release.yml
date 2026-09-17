@@ -24,20 +24,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 1. Поднимаем чистую изолированную среду Python на каждом сервере
+      # 1. Поднимаем чистую изолированную среду Python на каждом сервере (без капризного авто-кэша)
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-          cache: 'pip'
 
-      # 2. Устанавливаем необходимые вычислительные библиотеки и упаковщик PyInstaller
+      # 2. Устанавливаем вычислительные библиотеки и упаковщик PyInstaller
       - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install numpy matplotlib pyinstaller
 
-      # 3. Чистая нативная компиляция кода в монолитный исполняемый файл
+      # 3. Нативная компиляция кода в монолитный исполняемый файл
       - name: Compile Executable Binary
         run: |
           pyinstaller --onefile --noconsole --name visual-reality-3hcp markov_user_interface.py
@@ -48,7 +47,7 @@ jobs:
         run: mv dist/visual-reality-3hcp dist/${{ matrix.artifact_name }}
         shell: bash
 
-      # На Windows файл сразу собирается с нужным именем и расширением .exe
+      # На Windows файл сразу собирается в папке dist\ и мы приводим его имя к стандарту релиза
       - name: Rename Output Binary (Windows)
         if: matrix.os == 'windows-latest'
         run: rename dist\visual-reality-3hcp.exe ${{ matrix.artifact_name }}
