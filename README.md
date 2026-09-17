@@ -18,9 +18,6 @@
 
 ## ⚡ Interactive Automated Test Bench / Интерактивный тестовый стенд
 
-> **EN:** This section updates automatically! Upload any image from your phone to the `input/test.png` folder. GitHub Actions cloud servers will immediately process it, simulating standard neural temporal accumulation blur (DLSS/TAA) versus our rigid mathematical 3HCP layout.
->
-> **RU:** Этот раздел обновляется автоматически! Загрузите любую картинку с телефона в папку `input/test.png`. Облачные серверы GitHub Actions мгновенно обработают её, симулируя стандартное размытие нейросетевого апскейла (DLSS/TAA) против жесткого математического каркаса 3HCP.
 
 <p align="center">
   <img src="output/comparison.png" alt="Dynamic 3HCP Test Output" width="100%">
@@ -43,6 +40,24 @@ Dynamic 3HCP Test Output
 > *Примечание: Замеры скорости (Latency и FPS) произведены в реальном времени на облачных мощностях виртуального сервера GitHub Actions (Ubuntu Runner).* 
 
 <!-- BENCHMARK_TABLE_END -->
+
+## 🛠️ How to Run the Test / Как запустить тест
+
+Вы можете протестировать инвариантность ядра 3HCP на **любом собственном изображении** без установки Python на компьютер. Стенд автоматизирован через GitHub Actions.
+
+### 🇷🇺 Инструкция (Быстрый старт):
+1. Вверху репозитория нажмите на папку `input`.
+2. Удалите старый файл (если необходимо) и нажмите **Add file** -> **Upload files**.
+3. Загрузите любое изображение (`.png`, `.jpg`, `.webp`) и подтвердите коммит (**Commit changes**).
+4. GitHub Actions автоматически запустит тест. Через 30–40 секунд страница обновится: сгенерируется новая картинка `output/comparison.png`, а таблица бенчмарка выше пересчитает FPS и метрики под ваше изображение.
+
+---
+
+### 🇺🇸 Instructions (Quick Start):
+1. Navigate to the `input` folder at the root of this repository.
+2. Click **Add file** -> **Upload files** (delete the previous test file if needed).
+3. Upload any custom image (`.png`, `.jpg`, `.webp`) and click **Commit changes**.
+4. GitHub Actions will trigger instantly. Within 30–40 seconds, the cloud environment will update `output/comparison.png` and completely recalculate the FPS, Latency, and SSIM metrics inside the benchmark table above.
 
 ---
 
