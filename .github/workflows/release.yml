@@ -17,26 +17,26 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 1. Разворачиваем сверхбыструю среду uv на стабильном Linux-сервере
+      # 1. Разворачиваем проверенную скоростную среду uv
       - name: Install uv Build Manager
         uses: astral-sh/setup-uv@v5
         with:
           version: "latest"
 
-      # 2. КРОСС-КОМПИЛЯЦИЯ: Создаем Linux-бинарник и Windows .exe на одном шаге
+      # 2. Компиляция готовых исполняемых файлов для релиза
       - name: Compile Executables
         run: |
-          # Устанавливаем официальный компилятор Mojo 1.0.0 в окружение Linux
+          # Устанавливаем стабильный компилятор Mojo 1.0.0 (этот шаг у вас уже прошёл идеально)
           uv tool install mojo --prerelease=allow
           
-          # Сборка финальной версии под Linux (которая у вас уже успешно работала)
-          $HOME/.local/bin/mojo build markov_user_interface.mojo -o visual-reality-3hcp-linux
+          # Сборка финальной версии под Linux через вызов uv tool run
+          uv tool run mojo build markov_user_interface.mojo -o visual-reality-3hcp-linux
           
-          # КРОСС-СБОРКА ПОД WINDOWS: генерирует чистокровный релизный .exe файл через GNU-тулчейн
-          $HOME/.local/bin/mojo build markov_user_interface.mojo --target x86_64-pc-windows-gnu -o visual-reality-3hcp.exe
+          # КРОСС-СБОРКА ПОД WINDOWS: генерирует чистокровный релизный файл visual-reality-3hcp.exe
+          uv tool run mojo build markov_user_interface.mojo --target x86_64-pc-windows-gnu -o visual-reality-3hcp.exe
         shell: bash
 
-      # 3. Отправка обоих готовых файлов в раздел релизов на GitHub
+      # 3. Отправка обоих готовых файлов во вкладку релизов на GitHub
       - name: Upload Binaries to Release
         uses: softprops/action-gh-release@v2
         if: github.event_name == 'release'
@@ -47,7 +47,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 4. Сохранение обоих файлов в артефакты (для скачивания при ручном тесте по кнопке)
+      # 4. Сохранение обоих файлов в артефакты действий (для скачивания при ручном запуске кнопкой)
       - name: Upload Artifacts if Manual Run
         uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
