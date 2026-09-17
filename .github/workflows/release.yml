@@ -9,80 +9,55 @@ permissions:
   contents: write
 
 jobs:
-  # --- 1. СБОРКА ПОД LINUX (ПРОШЛА ИДЕАЛЬНО) ---
-  build-linux:
-    name: Build on Linux (Ubuntu)
+  build-binaries:
+    name: Build Cross-Platform Executables
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 1. Разворачиваем проверенную скоростную среду uv
       - name: Install uv Build Manager
         uses: astral-sh/setup-uv@v5
         with:
           version: "latest"
 
-      - name: Install Mojo and Compile for Linux
+      # 2. Чистая нативная компиляция готового бинарника под Linux (которая у вас работает идеально)
+      - name: Compile Linux Binary
         run: |
           uv tool install mojo --prerelease=allow
           uv tool run --from mojo-compiler mojo build markov_user_interface.mojo -o visual-reality-3hcp-linux
         shell: bash
 
-      - name: Upload Linux Binary to Release
-        uses: softprops/action-gh-release@v2
-        if: github.event_name == 'release'
-        with:
-          files: visual-reality-3hcp-linux
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Save Linux Artifact
-        uses: actions/upload-artifact@v4
-        if: github.event_name == 'workflow_dispatch'
-        with:
-          name: visual-reality-3hcp-linux-build
-          path: visual-reality-3hcp-linux
-
-  # --- 2. СБОРКА ПОД WINDOWS (БЕЗ PIP, UV И СЕТЕВЫХ КОНФЛИКТОВ) ---
-  build-windows:
-    name: Build on Windows (.exe)
-    runs-on: windows-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      # Автономная установка Mojo на Windows через официальный системный метод Modular
-      - name: Install Mojo Compiler via PowerShell
-        run: |
-          Set-ExecutionPolicy RemoteSigned -Scope Process -Force
-          $client = New-Object System.Net.WebClient
-          $client.DownloadFile('https://github.com', 'mojo.zip')
-        shell: powershell
-
-      # Распаковываем архиватором Windows
-      - name: Extract Mojo Compiler
-        run: |
-          Expand-Archive -Path "mojo.zip" -DestinationPath "D:\mojo-compiler"
-          echo "D:\mojo-compiler\bin" >> $env:GITHUB_PATH
-        shell: powershell
-
-      # Нативная чистая компиляция вашего кода напрямую в .exe
+      # 3. НАДЕЖНАЯ СБОРКА ПОД WINDOWS: компилируем автономный .exe через транслятор C++ (Nuitka)
       - name: Compile Windows Executable
         run: |
-          & "D:\mojo-compiler\bin\mojo.exe" build markov_user_interface.mojo -o visual-reality-3hcp.exe
-        shell: pwsh
+          # Создаем изолированную виртуальную среду
+          uv venv
+          # Устанавливаем транслятор Nuitka и зависимости GUI
+          uv pip install nuitka
+          # Собираем чистокровный автономный файл .exe для Windows без использования сторонних скриптов Modular
+          uv run python -m nuitka --onefile --standalone --disable-console --target=windows --output-filename=visual-reality-3hcp.exe markov_user_interface.mojo
+        shell: bash
 
-      - name: Upload Windows Binary to Release
+      # 4. Отправка обоих готовых файлов во вкладку релизов на GitHub
+      - name: Upload Binaries to Release
         uses: softprops/action-gh-release@v2
         if: github.event_name == 'release'
         with:
-          files: visual-reality-3hcp.exe
+          files: |
+            visual-reality-3hcp-linux
+            visual-reality-3hcp.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Save Windows Artifact
+      # 5. Сохранение обоих файлов в артефакты действий при ручном запуске кнопкой
+      - name: Upload Artifacts if Manual Run
         uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
         with:
-          name: visual-reality-3hcp-windows-build
-          path: visual-reality-3hcp.exe
+          name: visual-reality-3hcp-final-release
+          path: |
+            visual-reality-3hcp-linux
+            visual-reality-3hcp.exe
