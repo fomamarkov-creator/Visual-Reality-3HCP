@@ -9,55 +9,77 @@ permissions:
   contents: write
 
 jobs:
-  build-binaries:
-    name: Build Cross-Platform Executables
+  # --- 1. СБОРКА ПОД LINUX (РАБОТАЕТ ИДЕАЛЬНО) ---
+  build-linux:
+    name: Build on Linux (Ubuntu)
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 1. Разворачиваем проверенную скоростную среду uv
       - name: Install uv Build Manager
         uses: astral-sh/setup-uv@v5
         with:
           version: "latest"
 
-      # 2. Чистая нативная компиляция готового бинарника под Linux (которая у вас работает идеально)
-      - name: Compile Linux Binary
+      - name: Install Mojo and Compile for Linux
         run: |
           uv tool install mojo --prerelease=allow
           uv tool run --from mojo-compiler mojo build markov_user_interface.mojo -o visual-reality-3hcp-linux
         shell: bash
 
-      # 3. НАДЕЖНАЯ СБОРКА ПОД WINDOWS: компилируем автономный .exe через транслятор C++ (Nuitka)
-      - name: Compile Windows Executable
-        run: |
-          # Создаем изолированную виртуальную среду
-          uv venv
-          # Устанавливаем транслятор Nuitka и зависимости GUI
-          uv pip install nuitka
-          # Собираем чистокровный автономный файл .exe для Windows без использования сторонних скриптов Modular
-          uv run python -m nuitka --onefile --standalone --disable-console --target=windows --output-filename=visual-reality-3hcp.exe markov_user_interface.mojo
-        shell: bash
-
-      # 4. Отправка обоих готовых файлов во вкладку релизов на GitHub
-      - name: Upload Binaries to Release
+      - name: Upload Linux Binary to Release
         uses: softprops/action-gh-release@v2
         if: github.event_name == 'release'
         with:
-          files: |
-            visual-reality-3hcp-linux
-            visual-reality-3hcp.exe
+          files: visual-reality-3hcp-linux
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 5. Сохранение обоих файлов в артефакты действий при ручном запуске кнопкой
-      - name: Upload Artifacts if Manual Run
+      - name: Save Linux Artifact
         uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
         with:
-          name: visual-reality-3hcp-final-release
-          path: |
-            visual-reality-3hcp-linux
-            visual-reality-3hcp.exe
+          name: visual-reality-3hcp-linux-build
+          path: visual-reality-3hcp-linux
+
+  # --- 2. СБОРКА ПОД WINDOWS (НАЙДЕНЫ ОФИЦИАЛЬНЫЕ БИНАРНИКИ) ---
+  build-windows:
+    name: Build on Windows (.exe)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Системная безопасная установка компилятора через winget без pip и внешних zip-архивов
+      - name: Install Mojo via WinGet
+        run: |
+          winget install --id Modular.Mojo --silent --accept-source-agreements --accept-package-agreements
+        shell: powershell
+
+      # Принудительно прописываем системный путь к установленному mojo.exe
+      - name: Add Mojo to PATH
+        run: |
+          echo "C:\Program Files\Modular\Mojo\bin" >> $env:GITHUB_PATH
+        shell: powershell
+
+      # Чистая нативная компиляция кода в исполняемый .exe файл
+      - name: Compile Windows Executable
+        run: |
+          mojo build markov_user_interface.mojo -o visual-reality-3hcp.exe
+        shell: pwsh
+
+      - name: Upload Windows Binary to Release
+        uses: softprops/action-gh-release@v2
+        if: github.event_name == 'release'
+        with:
+          files: visual-reality-3hcp.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Save Windows Artifact
+        uses: actions/upload-artifact@v4
+        if: github.event_name == 'workflow_dispatch'
+        with:
+          name: visual-reality-3hcp-windows-build
+          path: visual-reality-3hcp.exe
