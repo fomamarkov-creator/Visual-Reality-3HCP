@@ -1,4 +1,4 @@
-name: Compile and Release Visual Reality 3HCP
+name: Compile and Release Visual Reality 3HCP (Windows)
 
 on:
   release:
@@ -9,48 +9,41 @@ permissions:
   contents: write
 
 jobs:
-  build-assets:
-    name: Build Executable
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            artifact_name: visual-reality-3hcp
-          - os: windows-latest
-            artifact_name: visual-reality-3hcp.exe
+  build-windows:
+    name: Build Executable on Windows
+    runs-on: windows-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 1. Официальный и стабильный метод установки среды сборки без curl-команд
+      # 1. Официальная установка пакетного менеджера на Windows
       - name: Set up Magic Build Tool
         uses: prefix-dev/setup-pixi@v0.8.1
         with:
           run-install: false
 
-      # 2. Инициализация проекта и автоматическая загрузка компилятора Mojo 1.0.0
-      - name: Install Project Dependencies and Mojo
+      # 2. Скачивание Windows-версии компилятора Mojo 1.0.0
+      - name: Install Windows Mojo Compiler
         run: pixi install
 
-      # 3. Компиляция бинарных файлов (используем прямой вызов pixi run)
-      - name: Compile Executable Binary
+      # 3. Компиляция в .exe файл
+      - name: Compile Windows Executable
         run: pixi run build
 
-      # 4. Загрузка файлов в раздел релизов на GitHub
-      - name: Upload Binaries to Release
+      # 4. Загрузка в релиз (если запуск по кнопке публикации релиза)
+      - name: Upload Binary to Release
         uses: softprops/action-gh-release@v2
         if: github.event_name == 'release'
         with:
-          files: ${{ matrix.artifact_name }}
+          files: visual-reality-3hcp.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 5. Сохранение в архив артефактов (для ручного теста кнопкой в приватном репо)
+      # 5. Сохранение в артефакты (при ручном тесте кнопкой в Actions)
       - name: Upload Artifacts if Manual Run
         uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
         with:
-          name: ${{ matrix.artifact_name }}-build
-          path: ${{ matrix.artifact_name }}
+          name: visual-reality-3hcp-windows-build
+          path: visual-reality-3hcp.exe
