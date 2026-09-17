@@ -9,69 +9,50 @@ permissions:
   contents: write
 
 jobs:
-  build-assets:
-    name: Build on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            artifact_name: visual-reality-3hcp-linux
-          - os: windows-latest
-            artifact_name: visual-reality-3hcp.exe
+  build-binaries:
+    name: Build Cross-Platform Executables
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 1. Разворачиваем чистую изолированную среду Python (работает и на Linux, и на Windows)
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      # 1. Разворачиваем сверхбыструю среду uv на стабильном Linux-сервере
+      - name: Install uv Build Manager
+        uses: astral-sh/setup-uv@v5
         with:
-          python-version: '3.11'
+          version: "latest"
 
-      # 2. Обновляем pip до актуальной версии
-      - name: Upgrade PIP
+      # 2. КРОСС-КОМПИЛЯЦИЯ: Создаем Linux-бинарник и Windows .exe на одном шаге
+      - name: Compile Executables
         run: |
-          python -m pip install --upgrade pip
+          # Устанавливаем официальный компилятор Mojo 1.0.0 в окружение Linux
+          uv tool install mojo --prerelease=allow
+          
+          # Сборка финальной версии под Linux (которая у вас уже успешно работала)
+          $HOME/.local/bin/mojo build markov_user_interface.mojo -o visual-reality-3hcp-linux
+          
+          # КРОСС-СБОРКА ПОД WINDOWS: генерирует чистокровный релизный .exe файл через GNU-тулчейн
+          $HOME/.local/bin/mojo build markov_user_interface.mojo --target x86_64-pc-windows-gnu -o visual-reality-3hcp.exe
+        shell: bash
 
-      # --- ШАГ ДЛЯ UBUNTU LINUX (Чистая установка без curl и сайтов Astral) ---
-      - name: Install Mojo on Linux
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          pip install mojo
-
-      - name: Compile Executable Binary (Ubuntu)
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          mojo build markov_user_interface.mojo -o ${{ matrix.artifact_name }}
-
-      # --- ШАГ ДЛЯ WINDOWS (Чистая сборка без Pixi и внешних ToML-файлов) ---
-      - name: Install Mojo on Windows
-        if: matrix.os == 'windows-latest'
-        run: |
-          pip install mojo
-        shell: pwsh
-
-      - name: Compile Windows Executable (Windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          mojo build markov_user_interface.mojo -o ${{ matrix.artifact_name }}
-        shell: pwsh
-
-      # ---ОТПРАВКА ГОТОВЫХ ФАЙЛОВ ПОЛЬЗОВАТЕЛЯМ ---
+      # 3. Отправка обоих готовых файлов в раздел релизов на GitHub
       - name: Upload Binaries to Release
         uses: softprops/action-gh-release@v2
         if: github.event_name == 'release'
         with:
-          files: ${{ matrix.artifact_name }}
+          files: |
+            visual-reality-3hcp-linux
+            visual-reality-3hcp.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Резервное сохранение файлов в архив действий (при ручном тесте кнопкой в привате)
+      # 4. Сохранение обоих файлов в артефакты (для скачивания при ручном тесте по кнопке)
       - name: Upload Artifacts if Manual Run
         uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
         with:
-          name: ${{ matrix.artifact_name }}-build
-          path: ${{ matrix.artifact_name }}
+          name: visual-reality-3hcp-all-platforms
+          path: |
+            visual-reality-3hcp-linux
+            visual-reality-3hcp.exe
