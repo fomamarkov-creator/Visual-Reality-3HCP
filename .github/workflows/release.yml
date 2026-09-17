@@ -24,37 +24,42 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 1. Поднимаем стандартное и чистое Python-окружение (есть на всех серверах GitHub)
+      # 1. Разворачиваем чистую изолированную среду Python (работает и на Linux, и на Windows)
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      # --- ШАГ ДЛЯ LINUX (Сборка через быстрый uv) ---
-      - name: Install uv and Compile (Ubuntu)
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          curl -LsSf https://astral.sh | sh
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-          uv run --with mojo-compiler mojo build markov_user_interface.mojo -o ${{ matrix.artifact_name }}
-        shell: bash
-
-      # --- ШАГ ДЛЯ WINDOWS (Чистая сборка через pip без Pixi) ---
-      - name: Install Mojo via PIP (Windows)
-        if: matrix.os == 'windows-latest'
+      # 2. Обновляем pip до актуальной версии
+      - name: Upgrade PIP
         run: |
           python -m pip install --upgrade pip
+
+      # --- ШАГ ДЛЯ UBUNTU LINUX (Чистая установка без curl и сайтов Astral) ---
+      - name: Install Mojo on Linux
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          pip install mojo
+
+      - name: Compile Executable Binary (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          mojo build markov_user_interface.mojo -o ${{ matrix.artifact_name }}
+
+      # --- ШАГ ДЛЯ WINDOWS (Чистая сборка без Pixi и внешних ToML-файлов) ---
+      - name: Install Mojo on Windows
+        if: matrix.os == 'windows-latest'
+        run: |
           pip install mojo
         shell: pwsh
 
-      # Компилируем готовый .exe файл для использования пользователями
       - name: Compile Windows Executable (Windows)
         if: matrix.os == 'windows-latest'
         run: |
           mojo build markov_user_interface.mojo -o ${{ matrix.artifact_name }}
         shell: pwsh
 
-      # --- ОТПРАВКА ГОТОВЫХ ФАЙЛОВ В РЕЛИЗЫ ---
+      # ---ОТПРАВКА ГОТОВЫХ ФАЙЛОВ ПОЛЬЗОВАТЕЛЯМ ---
       - name: Upload Binaries to Release
         uses: softprops/action-gh-release@v2
         if: github.event_name == 'release'
@@ -63,7 +68,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Резервное сохранение в артефакты действий (для ручного теста кнопкой в привате)
+      # Резервное сохранение файлов в архив действий (при ручном тесте кнопкой в привате)
       - name: Upload Artifacts if Manual Run
         uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
