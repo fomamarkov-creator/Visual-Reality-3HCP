@@ -17,7 +17,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 1. Официальный метод развертывания полноценной среды Mojo
+      # 1. Официальный метод развертывания полноценной среды сборщика
       - name: Setup Pixi Environment
         uses: prefix-dev/setup-pixi@v0.8.1
         with:
@@ -26,13 +26,13 @@ jobs:
       # 2. КРОСС-КОМПИЛЯЦИЯ: Создаем Linux-бинарник и Windows .exe на одном сервере
       - name: Compile Executables
         run: |
-          # Устанавливаем полноценную глобальную версию компилятора со всеми тулчейнами
-          pixi global install mojo
+          # Устанавливаем компилятор Mojo, явно указав официальный канал репозитория Modular
+          pixi global install mojo -c https://conda.modular.com/max -c conda-forge
           
-          # Сборка готовой версии под Linux (которая у вас уже работала)
+          # Сборка финальной версии под Linux для пользователей
           $HOME/.pixi/bin/mojo build markov_user_interface.mojo -o visual-reality-3hcp-linux
           
-          # Сборка финального релиза под Windows (.exe) через полноценный LLVM-таргет
+          # Сборка готового стабильного релиза под Windows (.exe) через LLVM-таргет
           $HOME/.pixi/bin/mojo build markov_user_interface.mojo --target x86_64-pc-windows-msvc -o visual-reality-3hcp.exe
         shell: bash
 
