@@ -21,75 +21,104 @@ def run_markov_engine(mode: String, size_val: Int, steps_val: Int) raises:
     var np = Python.import_module('numpy')
     var plt = Python.import_module('matplotlib.pyplot')
     var time = Python.import_module('time')
+    var builtins = Python.builtins()
+    
     print('==================================================================')
     print('ЗАПУСК ЯДРА DSM МАРКОВА ЧЕРЕЗ ИНТЕРФЕЙС ПОЛЬЗОВАТЕЛЯ...')
     print('Режим:', mode, '| Сетка:', size_val, 'x', size_val, '| Тактов:', steps_val)
     print('==================================================================')
+    
     var start_time = time.time()
     var N = size_val
     var M = size_val
-    var view_density = np.zeros(PythonObject([M, N]), 'float32')
+    
+    # Исправленное создание многомерного массива
+    var view_density = np.zeros(PythonObject((M, N)), 'float32')
     var mid = size_val // 2
-    view_density[PythonObject([mid-4:mid+4, mid-4:mid+4])] = 240.0
+    
+    # Исправленный синтаксис многомерного среза для Mojo 1.0.0
+    var sl = builtins.slice(mid - 4, mid + 4)
+    _ = view_density.__setitem__(PythonObject((sl, sl)), 240.0)
+    
     if mode == 'Медленный CPU-цикл':
         time.sleep(0.25)
+        
     var x_line = np.linspace(-3.1415, 3.1415, N)
     var y_line = np.linspace(-3.1415, 3.1415, M)
     var mesh = np.meshgrid(x_line, y_line)
     var view_velocity = np.sin(mesh[0]) * np.cos(mesh[1]) * 15.0
     var view_dlss5_frame = np.mod(view_density + view_velocity * 45.0, 256.0) / 255.0
     var calc_time = (time.time() - start_time) * 1000.0
-    var fig = plt.figure(figsize=PythonObject([15, 5]))
+    
+    var fig = plt.figure(figsize=PythonObject((15, 5)))
     _ = fig.suptitle('Efim S. Markov Core: DSM User Testing Stand', fontsize=12)
+    
     var ax1 = fig.add_subplot(1, 3, 1)
     _ = ax1.set_title('Fluid Density (rho_e)')
     var im1 = ax1.imshow(view_density, cmap='jet', origin='lower')
     _ = fig.colorbar(im1, ax=ax1)
+    
     var ax2 = fig.add_subplot(1, 3, 2)
     _ = ax2.set_title('Motion Vectors (V^t)')
     var im2 = ax2.imshow(view_velocity, cmap='plasma', origin='lower')
     _ = fig.colorbar(im2, ax=ax2)
+    
     var ax3 = fig.add_subplot(1, 3, 3)
     _ = ax3.set_title('Rendered Frame (Markov-DLSS 5)')
     var im3 = ax3.imshow(view_dlss5_frame, cmap='gray', origin='lower')
     _ = fig.colorbar(im3, ax=ax3)
+    
     _ = plt.tight_layout()
-    _ = plt.savefig('/content/markov_user_result.png', dpi=100)
+    _ = plt.savefig('visual_reality_3hcp_result.png', dpi=100)
     _ = plt.close()
+    
     print('Расчет успешно выполнен за:', round(calc_time, 2), 'мс!')
-    print('Результат сохранен в /content/markov_user_result.png')
+    print('Результат сохранен в текущую папку: visual_reality_3hcp_result.png')
 
 def main() raises:
     var tk = Python.import_module('tkinter')
     var ttk = Python.import_module('tkinter.ttk')
     var root = tk.Tk()
-    _ = root.title('Markov DSM Launcher v1.0')
+    
+    _ = root.title('Visual Reality 3HCP Launcher v1.0')
     _ = root.geometry('450x350')
-    var lbl_title = tk.Label(root, text='ДВИЖОК МАРКОВА: ТЕСТОВЫЙ СТЕНД DLSS 5', font=PythonObject(['Arial', 12, 'bold']))
+    
+    # Исправленная передача шрифтов через Python-кортежи (Tuple)
+    var lbl_title = tk.Label(root, text='ДВИЖОК МАРКОВА: ТЕСТОВЫЙ СТЕНД DLSS 5', font=PythonObject(('Arial', 12, 'bold')))
     _ = lbl_title.pack(pady=10)
+    
     var frame_mode = tk.Frame(root)
     _ = frame_mode.pack(pady=5)
+    
     var lbl_mode = tk.Label(frame_mode, text='Вычислительный режим:')
     _ = lbl_mode.pack(side='left', padx=5)
-    var cmb_mode = ttk.Combobox(frame_mode, values=PythonObject(['Быстрый векторный GPU/Mojo', 'Медленный CPU-цикл']))
+    
+    var cmb_mode = ttk.Combobox(frame_mode, values=PythonObject(('Быстрый векторный GPU/Mojo', 'Медленный CPU-цикл')))
     _ = cmb_mode.current(0)
     _ = cmb_mode.pack(side='left', padx=5)
+    
     var lbl_size = tk.Label(root, text='Разрешение пространственной сетки (N x M):')
     _ = lbl_size.pack(pady=5)
+    
     var sld_size = tk.Scale(root, from_=32, to=256, orient='horizontal', resolution=32)
     _ = sld_size.set(128)
     _ = sld_size.pack(pady=2)
+    
     var lbl_steps = tk.Label(root, text='Глубина тактов симуляции (Временные шаги):')
     _ = lbl_steps.pack(pady=5)
+    
     var sld_steps = tk.Scale(root, from_=10, to=200, orient='horizontal')
     _ = sld_steps.set(60)
     _ = sld_steps.pack(pady=2)
+    
     def on_click_launch():
         var m = cmb_mode.get()
         var s = int(sld_size.get())
         var st = int(sld_steps.get())
         run_markov_engine(m, s, st)
-    var btn_start = tk.Button(root, text='ЗАПУСТИТЬ ТЕСТ ЯДРА', bg='darkblue', fg='white', font=PythonObject(['Arial', 10, 'bold']), command=on_click_launch)
+        
+    var btn_start = tk.Button(root, text='ЗАПУСТИТЬ ТЕСТ ЯДРА', bg='darkblue', fg='white', font=PythonObject(('Arial', 10, 'bold')), command=on_click_launch)
     _ = btn_start.pack(pady=20)
+    
     print('Пользовательский интерфейс GUI Маркова успешно запущен!')
     _ = root.mainloop()
