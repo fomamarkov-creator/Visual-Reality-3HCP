@@ -17,26 +17,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 1. Поднимаем чистый Python
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+      # Официальный инструмент автоматического развертывания стабильного компилятора Mojo
+      - name: Set up Mojo Compiler
+        uses: modularml/setup-mojo@v1
 
-      # 2. Установка Mojo компилятора через официальный PIP-пакет от Modular
-      - name: Install Modular and Mojo Compiler
-        run: |
-          python -m pip install --upgrade pip
-          pip install modular
-        shell: pwsh
-
-      # 3. Прямая компиляция без каких-либо toml-зависимостей и прослоек
+      # Прямая чистая компиляция без промежуточных toml-слоев и сетевых ошибок
       - name: Compile Windows Executable
         run: |
           mojo build markov_user_interface.mojo -o visual-reality-3hcp.exe
         shell: pwsh
 
-      # 4. Отправка готового .exe в релизы GitHub
+      # Отправка готового приложения во вкладку релизов на GitHub
       - name: Upload Binary to Release
         uses: softprops/action-gh-release@v2
         if: github.event_name == 'release'
@@ -45,7 +36,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 5. Сохранение файла в архиве действий при ручном запуске тестов
+      # Безопасное сохранение .exe в архив артефактов Actions (для тестов кнопкой в привате)
       - name: Upload Artifacts if Manual Run
         uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
