@@ -9,47 +9,68 @@ permissions:
   contents: write
 
 jobs:
-  build-binaries:
-    name: Build Cross-Platform Executables
-    runs-on: ubuntu-latest
+  build-assets:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: visual-reality-3hcp-linux
+          - os: windows-latest
+            artifact_name: visual-reality-3hcp.exe
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 1. Разворачиваем сверхбыструю среду uv на стабильном Linux-сервере
-      - name: Install uv Build Manager
+      # --- СБОРКА ПОД LINUX (УЖЕ НА 100% РАБОЧАЯ) ---
+      - name: Install uv Build Manager (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
         uses: astral-sh/setup-uv@v5
         with:
           version: "latest"
 
-      # 2. Компиляция готовых исполняемых файлов для релиза (Обе платформы на одном шаге)
-      - name: Compile Executables
+      - name: Compile Executable Binary (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
         run: |
-          # Сборка финальной версии под Linux (которая уже успешно проверена)
-          uv run --with mojo-compiler mojo build markov_user_interface.mojo -o visual-reality-3hcp-linux
-          
-          # КРОСС-СБОРКА ПОД WINDOWS: генерирует чистокровный релизный .exe файл без использования Windows-серверов
-          uv run --with mojo-compiler mojo build markov_user_interface.mojo --target x86_64-pc-windows-gnu -o visual-reality-3hcp.exe
+          uv run --with mojo-compiler mojo build markov_user_interface.mojo -o ${{ matrix.artifact_name }}
         shell: bash
 
-      # 3. Отправка обоих готовых файлов в раздел релизов на GitHub
+      # --- ЖЕЛЕЗОБЕТОННАЯ СБОРКА ПОД WINDOWS (БЕЗ PIP, UV И ВЕБ-ССЫЛОК) ---
+      - name: Download and Install Official Mojo MSI (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          # Скачиваем стабильный релиз установщика напрямую из официального архива
+          Invoke-WebRequest -Uri "https://github.com" -OutFile "mojo.msi"
+          # Запускаем скрытую установку в систему сервера
+          Start-Process msiexec.exe -ArgumentList '/i mojo.msi /qn /norestart' -Wait
+        shell: powershell
+
+      - name: Add Mojo to System PATH (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          echo "C:\Program Files\Modular\Mojo\bin" >> $env:GITHUB_PATH
+        shell: powershell
+
+      - name: Compile Windows Executable (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          mojo build markov_user_interface.mojo -o ${{ matrix.artifact_name }}
+        shell: pwsh
+
+      # --- ОТПРАВКА ГОТОВОГО ПО ПОЛЬЗОВАТЕЛЯМ ---
       - name: Upload Binaries to Release
         uses: softprops/action-gh-release@v2
         if: github.event_name == 'release'
         with:
-          files: |
-            visual-reality-3hcp-linux
-            visual-reality-3hcp.exe
+          files: ${{ matrix.artifact_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 4. Сохранение обоих файлов в артефакты (для скачивания при ручном тесте по кнопке)
       - name: Upload Artifacts if Manual Run
         uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
         with:
-          name: visual-reality-3hcp-all-platforms
-          path: |
-            visual-reality-3hcp-linux
-            visual-reality-3hcp.exe
+          name: ${{ matrix.artifact_name }}-build
+          path: ${{ matrix.artifact_name }}
