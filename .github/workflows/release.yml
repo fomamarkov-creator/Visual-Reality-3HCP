@@ -9,50 +9,50 @@ permissions:
   contents: write
 
 jobs:
-  build-binaries:
-    name: Build Cross-Platform Executables
-    runs-on: ubuntu-latest
+  build-assets:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact_name: visual-reality-3hcp-linux
+          - os: windows-latest
+            artifact_name: visual-reality-3hcp.exe
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 1. Разворачиваем проверенную скоростную среду uv
+      # 1. Железобетонная установка скоростного менеджера uv (работает везде)
       - name: Install uv Build Manager
         uses: astral-sh/setup-uv@v5
         with:
           version: "latest"
 
-      # 2. Компиляция готовых исполняемых файлов для релиза
-      - name: Compile Executables
+      # 2. Установка компилятора Mojo 1.0.0 через uv (этот шаг у вас уже прошел идеально)
+      - name: Install Mojo Compiler
         run: |
-          # Устанавливаем стабильный компилятор Mojo 1.0.0 (этот шаг у вас уже прошёл идеально)
           uv tool install mojo --prerelease=allow
-          
-          # Сборка финальной версии под Linux через вызов uv tool run
-          uv tool run mojo build markov_user_interface.mojo -o visual-reality-3hcp-linux
-          
-          # КРОСС-СБОРКА ПОД WINDOWS: генерирует чистокровный релизный файл visual-reality-3hcp.exe
-          uv tool run mojo build markov_user_interface.mojo --target x86_64-pc-windows-gnu -o visual-reality-3hcp.exe
-        shell: bash
 
-      # 3. Отправка обоих готовых файлов во вкладку релизов на GitHub
+      # 3. Чистая компиляция финальной версии (без капризных флагов --target)
+      - name: Compile Executable Binary
+        run: |
+          uv tool run --from mojo-compiler mojo build markov_user_interface.mojo -o ${{ matrix.artifact_name }}
+
+      # 4. Отправка готовых файлов в раздел релизов на GitHub
       - name: Upload Binaries to Release
         uses: softprops/action-gh-release@v2
         if: github.event_name == 'release'
         with:
-          files: |
-            visual-reality-3hcp-linux
-            visual-reality-3hcp.exe
+          files: ${{ matrix.artifact_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 4. Сохранение обоих файлов в артефакты действий (для скачивания при ручном запуске кнопкой)
+      # 5. Резервное сохранение в артефакты действий (для скачивания при ручном тесте по кнопке)
       - name: Upload Artifacts if Manual Run
         uses: actions/upload-artifact@v4
         if: github.event_name == 'workflow_dispatch'
         with:
-          name: visual-reality-3hcp-all-platforms
-          path: |
-            visual-reality-3hcp-linux
-            visual-reality-3hcp.exe
+          name: ${{ matrix.artifact_name }}-build
+          path: ${{ matrix.artifact_name }}
