@@ -1,0 +1,33 @@
+MARKOV-DLSS 5 DUAL-LICENSING MODEL
+=========================================
+
+This repository is dual-licensed. Depending on your use case, you may choose 
+to use this software under the terms of either the Open-Source AGPLv3 License 
+or a Commercial Proprietary License.
+
+1. OPEN-SOURCE LICENSE (GNU AGPLv3)
+-----------------------------------
+For individual developers, researchers, and open-source projects, this software 
+is available under the GNU Affero General Public License version 3 (AGPLv3).
+
+Under this license:
+- You can use, modify, and distribute the source code for free.
+- Critical Condition: If you modify this software or integrate it into another 
+  application, and expose its functionality over a network (e.g., as a Cloud Service, 
+  SaaS, Web API, or online rendering hub), you MUST publicly disclose the complete 
+  source code of your entire modified application under the AGPLv3.
+
+2. COMMERCIAL PROPRIETARY LICENSE (Paid)
+-----------------------------------------
+If you are a commercial company, studio, or enterprise that wants to:
+- Integrate this "Markov Spatial Matrix Core" or its rendering engine into a commercial 
+  closed-source game, application, or proprietary software.
+- Avoid the obligation to open-source your downstream codebase or business logic.
+- Sell products or services powered by this software without public source disclosure.
+
+Then the AGPLv3 terms do NOT apply to you. You are REQUIRED to obtain a commercial 
+proprietary license directly from the copyright holder (Efim S. Markov / Visual Reality 3HCP Team).
+
+=========================================
+For commercial licensing inquiries, please contact the development team directly.
+Copyright (c) 2026 Visual Reality 3HCP Development Team. All rights reserved.
